@@ -1,17 +1,30 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom";
+import { BrowserRouter as Router, Route, Switch, Redirect, useHistory } from "react-router-dom";
+import { Home, Room } from "./Pages";
+
+const App = () => {
+  const history = useHistory(); // remember the history of user navigation
+
+  // defining the routing: (so far) homepage, lobby/room page. else redirect to home page for simplicity
+  return (
+    <Switch>
+      <Route exact path="/">
+        <Home history={history} />
+      </Route>
+      <Route exact path="/rooms/:id">
+        <Room history={history} />
+      </Route>
+      <Redirect to="/" />
+    </Switch>
+  );
+};
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <App />
+    </Router>
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById("root")
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

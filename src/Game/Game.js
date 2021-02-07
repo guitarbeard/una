@@ -1,9 +1,10 @@
 import { INVALID_MOVE } from 'boardgame.io/core';
+import { GAME_NAME } from "../config";
 
 const COLORS = ["blue","green","yellow","red"];
 
 function createDeck(deckLength) {
-  let cards = [];
+  const cards = [];
   for (let index = 0; index < deckLength; index++) {
     for(let color of COLORS){
       // 1x 0 and 2x 1-9
@@ -28,12 +29,13 @@ function createDeck(deckLength) {
 }
 
 function createPlayers(numPlayers, deck) {
-  const players = {};
+  const players = [];
   for (let i = 0; i < numPlayers; ++i) {
-    players['player_' + i.toString()] = {
-      name: `Player ${i + 1}`,
+    players.push({
+      name: "",
       hand: deck.splice(0, 7),
-    };
+      id: `${i}`,
+    });
   }
   return players;
 }
@@ -52,20 +54,23 @@ function createSetup(ctx) {
 
 
 export const Una = {
-  name: 'Una',
-
+  name: `${GAME_NAME}`,
+  minPlayers: 2,
+  maxPlayers: 8,
   setup: createSetup,
-
   moves: {
     drawCard: (G, ctx, playerID) => {
-      const card = G.deck.pop();
-      G.players['player_' + playerID].hand.push(card);
+      let card = G.deck.pop();
+      G.players[playerID].hand.push(card);
     },
 
     playCard: (G, ctx, playerID, cardIndex) => {
-      if (G.players['player_' + playerID].hand[cardIndex].number === G.currentCard.number || G.players['player_' + playerID].hand[cardIndex].color === G.currentCard.color) {
-        let playedCardArr = G.players['player_' + playerID].hand.splice(cardIndex, 1);
-        G.currentCard = playedCardArr[0];
+      if (G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color) {
+        let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
+        if (playedCard.color === 'wild') {
+          playedCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
+        }
+        G.currentCard = playedCard;
       } else {
         return INVALID_MOVE;
       }
@@ -77,8 +82,11 @@ export const Una = {
   },
 
   endIf: (G, ctx) => {
-    if (!G.players['player_' + ctx.currentPlayer].hand.length) {
+    if (!G.players[ctx.currentPlayer].hand.length) {
       return { winner: ctx.currentPlayer };
+    }
+    if (!G.deck.length) {
+      return 'Out of Cards';
     }
   },
 };
