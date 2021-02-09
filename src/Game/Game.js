@@ -1,4 +1,5 @@
-import { INVALID_MOVE } from 'boardgame.io/core';
+import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
+import { func } from 'prop-types';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue","green","yellow","red"];
@@ -40,6 +41,14 @@ function createPlayers(numPlayers, deck) {
   return players;
 }
 
+function getNextPlayerIndex(playOrderPos, numPlayers, reverse) {
+  let nextPlayerIndex = (playOrderPos + 1) % numPlayers;
+  if(reverse) {
+    nextPlayerIndex = (playOrderPos === 0) ? (numPlayers - 1) : (playOrderPos - 1) ;
+  }
+  return nextPlayerIndex;
+}
+
 function createSetup(ctx) {
   let deck = ctx.random.Shuffle(createDeck(1));
   const players =  createPlayers(ctx.numPlayers, deck);
@@ -48,10 +57,11 @@ function createSetup(ctx) {
   return {
     deck,
     players,
-    currentCard
+    currentCard,
+    reverse: false,
+    skipped: true
   };
 }
-
 
 export const Una = {
   name: `${GAME_NAME}`,
@@ -60,8 +70,12 @@ export const Una = {
   setup: createSetup,
   moves: {
     drawCard: (G, ctx, playerID) => {
-      let card = G.deck.pop();
-      G.players[playerID].hand.push(card);
+      if (G.deck.length) {
+        let card = G.deck.pop();
+        G.players[playerID].hand.push(card);
+      } else {
+        return INVALID_MOVE;
+      }
     },
 
     playCard: (G, ctx, playerID, cardIndex) => {
@@ -69,6 +83,22 @@ export const Una = {
         let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
         if (playedCard.color === 'wild') {
           playedCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
+        }
+        if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4') {
+          G.skipped = true;
+          if (playedCard.type === 'draw2') {
+            const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
+            let cards = G.deck.splice(0, G.deck.length >= 2 ? 2 : G.deck.length);
+            G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
+          }
+          if (playedCard.type === 'wilddraw4') {
+            const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
+            let cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
+            G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
+          }
+        }
+        if (playedCard.type === 'reverse') {
+          G.reverse = !G.reverse;
         }
         G.currentCard = playedCard;
       } else {
@@ -79,6 +109,23 @@ export const Una = {
 
   turn: {
     moveLimit: 1,
+    // activePlayers: ActivePlayers.ALL,
+    onBegin: (G, ctx) => {
+      G.skipped = false;
+    },
+    order: {
+      // Get the initial value of playOrderPos.
+      // This is called at the beginning of the phase.
+      first: (G, ctx) => 0,
+
+      // Get the next value of playOrderPos.
+      // This is called at the end of each turn.
+      // The phase ends if this returns undefined.
+      next: (G, ctx) => {
+        const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
+        return G.skipped ? getNextPlayerIndex(nextPlayerIndex, ctx.numPlayers, G.reverse) : nextPlayerIndex;        
+      }
+    },
   },
 
   endIf: (G, ctx) => {
@@ -86,7 +133,7 @@ export const Una = {
       return { winner: ctx.currentPlayer };
     }
     if (!G.deck.length) {
-      return 'Out of Cards';
+      return { message: 'Out of Cards' };
     }
   },
 };

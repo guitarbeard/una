@@ -14,7 +14,7 @@ const SERVER_URL = APP_PRODUCTION ? origin : `${protocol}//${hostname}:${DEFAULT
 const UnaClient = Client({
   game: Una,
   board: Board,
-  debug: false,
+  debug: true,
   multiplayer: SocketIO({ server: SERVER_URL }),
 });
 

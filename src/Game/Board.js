@@ -16,7 +16,6 @@ export default class Board extends React.Component {
     }
 
     let winner = '';
-    console.log(this.props.matchData);
     if (this.props.ctx.gameover) {
       if (this.props.ctx.gameover.winner !== undefined) {
         winner = <div>{this.props.matchData[this.props.ctx.gameover.winner].name} WINS!!!</div>;
@@ -25,8 +24,8 @@ export default class Board extends React.Component {
         } else {
           yourTurn = <div><strong>YOU LOSE!!!</strong></div>;
         }
-      } else {
-        winner = <div>{this.props.ctx.gameover}</div>
+      } else if(this.props.ctx.gameover.message !== undefined) {
+        yourTurn = <div><strong>{this.props.ctx.gameover.message}</strong></div>;
       }      
     }
 
@@ -38,7 +37,7 @@ export default class Board extends React.Component {
     return (
       <div>
         {winner}
-        <ul>{this.props.matchData.map((player, index) => <li key={index} style={{color: parseInt(this.props.ctx.currentPlayer) === index ? 'red' : 'black'}}>{player.name}{player.isConnected ? '' : 'not connected'}</li>)}</ul>
+        <ul>{this.props.matchData.map((player, index) => <li key={index} style={{color: parseInt(this.props.ctx.currentPlayer) === index ? 'red' : 'black'}}>{player.name}{player.isConnected ? '' : ' not connected'}</li>)}</ul>
         <h1 style={{color: this.props.G.currentCard.color === 'wild' ? 'purple' : this.props.G.currentCard.color}}>{this.props.G.currentCard.number}</h1>
         {yourTurn}
         <button onClick={() => this.drawCard()}>DRAW CARD <br/>{this.props.G.deck.length} cards remaining</button>
