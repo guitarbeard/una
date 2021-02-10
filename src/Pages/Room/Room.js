@@ -14,7 +14,7 @@ const SERVER_URL = APP_PRODUCTION ? origin : `${protocol}//${hostname}:${DEFAULT
 const UnaClient = Client({
   game: Una,
   board: Board,
-  debug: true,
+  debug: false,
   multiplayer: SocketIO({ server: SERVER_URL }),
 });
 
@@ -91,36 +91,38 @@ const Room = (props) => {
   } else {
     return (
       <Lobby>
-        <span className="title room-title">Room</span>
-        <div className="players-list">
-          {players.map((player) => {
-            if (player.name) {
-              return player.name + `${player.name === localStorage.getItem("name") ? " (You)" : ""}\n`;
-            } else {
-              return "...\n";
-            }
-          })}
-        </div>
-        <div className="room-info-area">
-          <div className="roomID-area">
-            room id:
-            <textarea id="roomID" value={id} readOnly />
+        <section>
+          <h2>Waiting Room</h2>
+          <div className="nes-container with-title">
+            <p className="title">Invite Your Friends</p>
+            <p className="mb">Game will begin once all {players.length === 0 ? "" : ` ${players.length}`} players have joined.</p>
+            <div className="nes-field">
+              <label htmlFor="roomID">Room ID</label>
+              <input type="text" className="nes-input" id="roomID" value={id} readOnly />
+            </div>
             <button
-              className={classNames("copy-btn", { "copied-btn": copied })}
+              className={classNames("nes-btn", { "is-disabled": copied })}
               onClick={copyToClipboard}
               disabled={copied}
             >
-              {copied ? "copied" : "copy"}
+              {copied ? "Copied" : "Copy"}
             </button>
           </div>
-          <div className="room-info">
-            Game will begin once all
-            {players.length === 0 ? "" : ` ${players.length}`} players have joined.
+          <div className="players-list mt mb">
+            {players.map((player, index) => {
+              if (player.name) {
+                return <span key={index} className="nes-badge"><span className="is-primary">{player.name} {player.name === localStorage.getItem("name") ? " (You)" : ""}</span></span>;
+              } else {
+                return '';
+              }
+            })}
           </div>
-          <button className="leave-btn" onClick={leaveRoom}>
-            leave
-          </button>
-        </div>
+          <div>
+            <button className="nes-btn is-error" onClick={leaveRoom}>
+              Leave
+            </button>
+          </div>
+        </section>
       </Lobby>
     );
   }

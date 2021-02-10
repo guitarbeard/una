@@ -3,6 +3,9 @@ import ReactDOM from "react-dom";
 import { BrowserRouter as Router, Route, Switch, Redirect, useHistory } from "react-router-dom";
 import { Home, Room } from "./Pages";
 
+import "nes.css/css/nes.min.css";
+import "./App.css";
+
 const App = () => {
   const history = useHistory(); // remember the history of user navigation
 
@@ -22,6 +25,7 @@ const App = () => {
 
 ReactDOM.render(
   <React.StrictMode>
+    <header><div className="container"><a href="/"><h1>UNA</h1></a></div></header>
     <Router>
       <App />
     </Router>

@@ -1,5 +1,28 @@
 import React from 'react';
 
+function getCardClass(color) {
+  let cardClass = '';
+    switch (color) {
+      case 'blue':
+        cardClass = 'is-primary';
+        break;
+      case 'red':
+        cardClass = 'is-error';
+        break;
+      case 'green':
+        cardClass = 'is-success';
+        break;
+      case 'yellow':
+        cardClass = 'is-warning';
+        break;
+      default:
+        cardClass = 'is-wild';
+        break;
+    }
+
+    return cardClass;
+}
+
 export default class Board extends React.Component {
   drawCard() {
     this.props.moves.drawCard(this.props.playerID);
@@ -12,20 +35,22 @@ export default class Board extends React.Component {
   render() {
     let yourTurn = '';
     if (this.props.ctx.currentPlayer === this.props.playerID) {
-      yourTurn = <div><strong>YOUR TURN</strong></div>;
+      yourTurn = 'Your Turn';
+    } else {
+      yourTurn = this.props.matchData[this.props.ctx.currentPlayer].name + "'s Turn"
     }
 
     let winner = '';
     if (this.props.ctx.gameover) {
       if (this.props.ctx.gameover.winner !== undefined) {
-        winner = <div>{this.props.matchData[this.props.ctx.gameover.winner].name} WINS!!!</div>;
+        winner = <h2 className="text-center">{this.props.matchData[this.props.ctx.gameover.winner].name} WINS!!!</h2>;
         if (this.props.ctx.currentPlayer === this.props.playerID) {
-          yourTurn = <div><strong>YOU WIN!!!</strong></div>;
+          yourTurn = 'YOU WIN!!!';
         } else {
-          yourTurn = <div><strong>YOU LOSE!!!</strong></div>;
+          yourTurn = 'YOU LOSE!!!';
         }
       } else if(this.props.ctx.gameover.message !== undefined) {
-        yourTurn = <div><strong>{this.props.ctx.gameover.message}</strong></div>;
+        yourTurn = this.props.ctx.gameover.message;
       }      
     }
 
@@ -35,17 +60,24 @@ export default class Board extends React.Component {
     }
 
     return (
-      <div>
-        {winner}
-        <ul>{this.props.matchData.map((player, index) => <li key={index} style={{color: parseInt(this.props.ctx.currentPlayer) === index ? 'red' : 'black'}}>{player.name}{player.isConnected ? '' : ' not connected'}</li>)}</ul>
-        <h1 style={{color: this.props.G.currentCard.color === 'wild' ? 'purple' : this.props.G.currentCard.color}}>{this.props.G.currentCard.number}</h1>
-        {yourTurn}
-        <button onClick={() => this.drawCard()}>DRAW CARD <br/>{this.props.G.deck.length} cards remaining</button>
-        <hr/>
-        <div>
-            {hand.map((card, index) => <button key={index} onClick={() => this.playCard(index)} style={{background: card.color === 'wild' ? 'purple' : card.color}}>{card.number}</button>)}
-        </div> 
-      </div>
+      <main>
+        <div className="container">
+          {winner}
+          <div className="nes-container with-title">
+            <p className="title">{yourTurn}</p>
+            {this.props.matchData.map((player, index) => <span key={index} className="nes-badge"><span className={parseInt(this.props.ctx.currentPlayer) === index ? 'is-success' : 'is-primary'}>{player.name}</span></span>)}
+          </div>
+          <div className="text-center">
+            <button className="nes-btn card deck mb mt" onClick={() => this.drawCard()}><span><span>DRAW</span><br/>{this.props.G.deck.length}</span></button>
+            <div className={`discard card nes-btn mb mt ${getCardClass(this.props.G.currentCard.color)}`}><span>{this.props.G.currentCard.number}</span></div>
+          </div>
+          <hr/>
+          <div className="hand-wrap">
+              {hand.map((card, index) => <button key={index} className={`card nes-btn mb ${getCardClass(card.color)}`} onClick={() => this.playCard(index)}><span>{card.number}</span></button>)}
+          </div> 
+        </div>
+      </main>
+      
     );
   }
 }

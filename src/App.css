@@ -1,0 +1,119 @@
+@charset "utf-8";
+@import url(https://fonts.googleapis.com/css?family=Press+Start+2P);
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9;
+    border-bottom: 4px solid #D3D3D3;
+    background-color: white;
+    text-align: center;
+}
+
+header > .container {
+    display: flex;
+    justify-content: center;
+}
+
+main {
+    padding-top: 90px;
+}
+
+.container {
+    max-width: 980px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+section {
+    margin-bottom: 3rem;
+}
+
+h2 {
+    margin-bottom: 1.5rem; 
+}
+
+hr {
+    border: none;
+    border-bottom: 4px solid #D3D3D3;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.nes-field, .nes-select {
+    margin-bottom: 1.5rem;
+}
+
+.mt {
+    margin-top: 1.5rem;
+}
+
+.mb {
+    margin-bottom: 1.5rem;
+}
+
+.mr {
+    margin-right: 1.5rem;
+}
+
+.ml {
+    margin-left: 1.5rem;
+}
+
+.nes-badge {
+    width: auto;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.nes-badge span:first-child {
+    position: relative !important;
+    padding-left: .5rem !important;
+    padding-right: .5rem !important;
+}
+
+.hand-wrap {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.card {
+    font-size: 34px;
+    width: 72px;
+    height: 100px;
+    margin-left: .5em;
+    margin-right: .5em;
+}
+
+.card > span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.deck {
+   width: 100px;
+   height: 140px;
+   font-size: 30px;
+}
+
+.deck > span > span {
+    font-size: 22px;
+}
+
+.discard {
+    cursor: inherit;
+    width: 100px;
+    height: 140px;
+    font-size: 42px;
+}

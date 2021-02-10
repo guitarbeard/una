@@ -10,7 +10,7 @@ const Home = (props) => {
   const [room, setRoom] = useState("");
   const [jName, setJName] = useState("");
   const jNameCount = maxNameLength - jName.length;
-  const [num, setNum] = useState(2);
+  const [num, setNum] = useState("");
   const [cName, setCName] = useState("");
   const cNameCount = maxNameLength - cName.length;
   const [errMsg, setErrMsg] = useState("");
@@ -82,85 +82,99 @@ const Home = (props) => {
     }
   };
 
-  const createRoom = () => {
+  const createRoom = (e) => {
+    e.preventDefault();
     api.createRoom(num).then((roomID) => {
       joinRoom(roomID, cName);
     });
   };
 
+  const handleJoinRoom = (e) => {
+    e.preventDefault();
+    joinRoom(room, jName);
+  };
+
   return (
     <Lobby>
-      <span className="title join-title">join game</span>
-      <div className="input-info-area">
-        <p style={{ margin: "0" }}>room id</p>
-      </div>
-      <input
-        id="roomIdentification"
-        type="text"
-        maxLength={`${roomIDLength}`}
-        spellCheck="false"
-        autoComplete="off"
-        onKeyDown={(e) => handleKeyDown(e)}
-        onChange={(e) => setRoom(e.target.value)}
-        className="input-field"
-      />
-      <div className="input-info-area">
-        <p style={{ margin: "0" }}>your name</p>
-        <p style={{ margin: "0 0 0 auto" }}>{jNameCount}</p>
-      </div>
-      <div className="user-input">
-        <input
-          id="joinName"
-          type="text"
-          maxLength={`${maxNameLength}`}
-          spellCheck="false"
-          autoComplete="off"
-          onKeyDown={(e) => handleKeyDown(e, jName)}
-          onChange={(e) => setJName(e.target.value)}
-          onPaste={(e) => e.preventDefault()}
-          className="input-field"
-        />
-      </div>
-      <button
-        className="lobby-btn"
-        disabled={room.length !== roomIDLength || jName.length === 0}
-        onClick={() => joinRoom(room, jName)}
-      >
-        join
-      </button>
-      <div className="error-msg">{errMsg}</div>
-      <span className="title create-title">create lobby</span>
-      <div className="input-info-area">
-        <p style={{ margin: "0" }}># players: {num}</p>
-      </div>
-      <input
-        type="range"
-        min="2"
-        max="8"
-        value={num}
-        autoComplete="off"
-        onChange={(e) => setNum(e.target.value)}
-        className="input-slider"
-      />
-      <div className="input-info-area">
-        <p style={{ margin: "0" }}>your name</p>
-        <p style={{ margin: "0 0 0 auto" }}>{cNameCount}</p>
-      </div>
-      <div className="user-input">
-        <input
-          type="text"
-          maxLength={`${maxNameLength}`}
-          spellCheck="false"
-          autoComplete="off"
-          onKeyDown={(e) => handleKeyDown(e, cName)}
-          onChange={(e) => setCName(e.target.value)}
-          onPaste={(e) => e.preventDefault()}
-          className="input-field"
-        />
-      </div>
-      <button className="lobby-btn" disabled={cName.length === 0} onClick={createRoom}>
-        create
-      </button>
+      <section>
+        <form onSubmit={handleJoinRoom}>
+          <h2>Join Game</h2>
+          <div className="nes-field">
+            <label htmlFor="roomIdentification">Room ID</label>
+            <input
+              id="roomIdentification"
+              type="text"
+              maxLength={`${roomIDLength}`}
+              spellCheck="false"
+              autoComplete="off"
+              onKeyDown={(e) => handleKeyDown(e)}
+              onChange={(e) => setRoom(e.target.value)}
+              className="nes-input"
+            />
+          </div>
+          <div className="nes-field">
+            <label htmlFor="join-name">Username {jNameCount}</label>
+            <input
+              id="join-name"
+              type="text"
+              maxLength={`${maxNameLength}`}
+              spellCheck="false"
+              autoComplete="off"
+              onKeyDown={(e) => handleKeyDown(e, jName)}
+              onChange={(e) => setJName(e.target.value)}
+              onPaste={(e) => e.preventDefault()}
+              className="nes-input"
+            />
+          </div>
+          <button
+            type="submit"
+            className={`nes-btn ${(room.length !== roomIDLength || jName.length === 0) ? 'is-disabled' : 'is-primary'}`}
+            disabled={room.length !== roomIDLength || jName.length === 0}
+          >
+            Join
+          </button>
+          <div className="nes-text is-error mt">{errMsg}</div>
+        </form>
+      </section>
+      <section>
+        <form onSubmit={createRoom}>
+          <h2>Create Game</h2>
+          <label htmlFor="number-of-players"># of players: {num}</label>
+          <div className="nes-select">
+            <select id="number-of-players" value={num} onChange={(e) => setNum(e.target.value)}>
+              <option value="" disabled hidden>Select...</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </div>
+          <div className="nes-field">
+            <label htmlFor="create-name">Username {cNameCount}</label>
+            <input
+              id="create-name"
+              type="text"
+              maxLength={`${maxNameLength}`}
+              spellCheck="false"
+              autoComplete="off"
+              onKeyDown={(e) => handleKeyDown(e, cName)}
+              onChange={(e) => setCName(e.target.value)}
+              onPaste={(e) => e.preventDefault()}
+              className="nes-input"
+            />
+          </div>
+          <button
+            type="submit"
+            className={`nes-btn ${cName.length === 0 ? 'is-disabled' : 'is-primary'}`}
+            disabled={cName.length === 0}
+          >
+            Create
+          </button>
+        </form>
+      </section>
     </Lobby>
   );
 };
