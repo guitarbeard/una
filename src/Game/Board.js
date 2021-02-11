@@ -23,6 +23,16 @@ function getCardClass(color) {
     return cardClass;
 }
 
+function sortByNumber(a, b) {
+  const compare = a.numberIndex - b.numberIndex;
+  return compare;
+}
+
+function sortByColor(a, b) {
+  const compare = a.colorIndex - b.colorIndex;
+  return compare;
+}
+
 export default class Board extends React.Component {
   drawCard() {
     this.props.moves.drawCard(this.props.playerID);
@@ -33,9 +43,11 @@ export default class Board extends React.Component {
   }
 
   render() {
+    const isYourTurn = this.props.ctx.currentPlayer === this.props.playerID;
     let yourTurn = '';
-    if (this.props.ctx.currentPlayer === this.props.playerID) {
-      yourTurn = 'Your Turn';
+
+    if (isYourTurn) {
+      yourTurn = <span><i className="nes-icon heart is-small"></i>Your Turn<i className="nes-icon heart is-small"></i></span>;
     } else {
       yourTurn = this.props.matchData[this.props.ctx.currentPlayer].name + "'s Turn"
     }
@@ -44,27 +56,34 @@ export default class Board extends React.Component {
     if (this.props.ctx.gameover) {
       if (this.props.ctx.gameover.winner !== undefined) {
         winner = <h2 className="text-center">{this.props.matchData[this.props.ctx.gameover.winner].name} WINS!!!</h2>;
-        if (this.props.ctx.currentPlayer === this.props.playerID) {
-          yourTurn = 'YOU WIN!!!';
+        if (isYourTurn) {
+          yourTurn = <span><i className="nes-icon trophy is-small"></i>YOU WIN!!!<i className="nes-icon trophy is-small"></i></span>;
         } else {
-          yourTurn = 'YOU LOSE!!!';
+          yourTurn = <span><i className="nes-icon close is-small"></i>YOU LOSE!!!<i className="nes-icon close is-small"></i></span>;
         }
       } else if(this.props.ctx.gameover.message !== undefined) {
-        yourTurn = this.props.ctx.gameover.message;
+        yourTurn = <span><i className="nes-icon heart is-empty is-small"></i>{this.props.ctx.gameover.message}<i className="nes-icon heart is-empty is-small"></i></span>;
       }      
     }
 
     let hand = [];
-    if (this.props.G.players[this.props.playerID]) {
-      hand = this.props.G.players[this.props.playerID].hand;
-    }
-
+    hand = this.props.G.players[this.props.playerID].hand.slice().map((card, index) => {
+      return {
+        originalIndex: index,
+        numberIndex: card.numberIndex,
+        colorIndex: card.colorIndex,
+        type: card.type,
+        color: card.color,
+        number: card.number
+      };
+    });
+    hand.sort(sortByNumber).sort(sortByColor);
     return (
       <main>
         <div className="container">
           {winner}
           <div className="nes-container with-title">
-            <p className="title">{yourTurn}</p>
+            <p className={`title ${isYourTurn ? 'nes-text is-error' : ''}`}>{yourTurn}</p>
             {this.props.matchData.map((player, index) => <span key={index} className="nes-badge"><span className={parseInt(this.props.ctx.currentPlayer) === index ? 'is-success' : 'is-primary'}>{player.name}</span></span>)}
           </div>
           <div className="text-center">
@@ -73,7 +92,7 @@ export default class Board extends React.Component {
           </div>
           <hr/>
           <div className="hand-wrap">
-              {hand.map((card, index) => <button key={index} className={`card nes-btn mb ${getCardClass(card.color)}`} onClick={() => this.playCard(index)}><span>{card.number}</span></button>)}
+              {hand.map((card, index) => <button key={index} className={`card nes-btn mb ${getCardClass(card.color)}`} onClick={() => this.playCard(card.originalIndex)}><span>{card.number}</span></button>)}
           </div> 
         </div>
       </main>

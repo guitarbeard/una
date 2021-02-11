@@ -1,7 +1,7 @@
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { GAME_NAME } from "../config";
 
-const COLORS = ["blue","green","yellow","red"];
+const COLORS = ["blue", "green", "red", "yellow"];
 
 function createDeck(deckLength) {
   const cards = [];
@@ -9,20 +9,20 @@ function createDeck(deckLength) {
     for(let color of COLORS){
       // 1x 0 and 2x 1-9
       for(let i=0;i<=9;i+=.5){
-        cards.push({type:"regular", color, number:Math.ceil(i)});
+        cards.push({numberIndex: i, colorIndex: COLORS.indexOf(color), type:"regular", color, number:Math.ceil(i)});
       }
       
       // 2x each action card
       for(let i=0;i<2;i++){
-        cards.push({type:"skip", color, number:">"});
-        cards.push({type:"reverse", color, number:"R"});
-        cards.push({type:"draw2", color, number:"+2"});
+        cards.push({numberIndex: 10, colorIndex: COLORS.indexOf(color), type:"reverse", color, number:"R"});
+        cards.push({numberIndex: 11, colorIndex: COLORS.indexOf(color), type:"skip", color, number:">"});
+        cards.push({numberIndex: 12, colorIndex: COLORS.indexOf(color), type:"draw2", color, number:"+2"});
       }
 
       // Wild cards once
-      cards.push({type:"wild", color:"wild", number:"?"});
+      cards.push({numberIndex: 13, colorIndex: 4, type:"wild", color:"wild", number:"?"});
       // Wild+4 cards once
-      cards.push({type:"wilddraw4", color:"wild", number:"+4"});
+      cards.push({numberIndex: 13, colorIndex: 4, type:"wilddraw4", color:"wild", number:"+4"});
     }
   }
   return cards;
