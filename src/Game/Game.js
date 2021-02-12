@@ -35,6 +35,7 @@ function createPlayers(numPlayers, deck) {
       name: "",
       hand: deck.splice(0, 7),
       id: `${i}`,
+      calledUna: false
     });
   }
   return players;
@@ -51,8 +52,8 @@ function getNextPlayerIndex(playOrderPos, numPlayers, reverse) {
 function createSetup(ctx) {
   let deck = ctx.random.Shuffle(createDeck(1));
   const players =  createPlayers(ctx.numPlayers, deck);
-  const currentCard = deck.pop();
-
+  let currentCard = deck.pop();
+  currentCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
   return {
     deck,
     players,
@@ -68,42 +69,63 @@ export const Una = {
   maxPlayers: 8,
   setup: createSetup,
   moves: {
-    drawCard: (G, ctx, playerID) => {
-      if (G.deck.length) {
-        let card = G.deck.pop();
-        G.players[playerID].hand.push(card);
-      } else {
-        return INVALID_MOVE;
-      }
+    callUna: {
+      move: (G, ctx, playerID) => {
+        if ((G.players[playerID].hand.length === 2 && playerID === ctx.currentPlayer) || G.players[playerID].hand.length < 2) {
+          G.players[playerID].calledUna = true;
+        } else {
+          return INVALID_MOVE;
+        }
+      },
+      client: false,
+      noLimit: true
     },
 
-    playCard: (G, ctx, playerID, cardIndex) => {
-      if (G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color) {
-        let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
-        if (playedCard.color === 'wild') {
-          playedCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
+    drawCard: {
+      move: (G, ctx, playerID) => {
+        if (G.deck.length) {
+          let card = G.deck.pop();
+          G.players[playerID].hand.push(card);
+          G.players[playerID].calledUna = false;
+        } else {
+          return INVALID_MOVE;
         }
-        if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4') {
-          G.skipped = true;
-          if (playedCard.type === 'draw2') {
-            const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-            let cards = G.deck.splice(0, G.deck.length >= 2 ? 2 : G.deck.length);
-            G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
-          }
-          if (playedCard.type === 'wilddraw4') {
-            const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-            let cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
-            G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
-          }
-        }
-        if (playedCard.type === 'reverse') {
-          G.reverse = !G.reverse;
-        }
-        G.currentCard = playedCard;
-      } else {
-        return INVALID_MOVE;
-      }
+      },
+      client: false
     },
+    
+    playCard: {
+      move: (G, ctx, playerID, cardIndex) => {
+        if (G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color) {
+          let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
+          if (playedCard.color === 'wild') {
+            playedCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
+          }
+          if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4' || (playedCard.type === 'reverse' && ctx.numPlayers === 2)) {
+            G.skipped = true;
+            if (playedCard.type === 'draw2') {
+              const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
+              let cards = G.deck.splice(0, G.deck.length >= 2 ? 2 : G.deck.length);
+              G.players[nextPlayerIndex].calledUna = false;
+              G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
+            }
+            if (playedCard.type === 'wilddraw4') {
+              const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
+              let cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
+              G.players[nextPlayerIndex].calledUna = false;
+              G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
+            }
+          }
+          if (playedCard.type === 'reverse') {
+            G.reverse = !G.reverse;
+          }
+          G.currentCard = playedCard;
+        } else {
+          return INVALID_MOVE;
+        }
+      },
+      client: false
+    }
   },
 
   turn: {

@@ -42,14 +42,18 @@ export default class Board extends React.Component {
     this.props.moves.playCard(this.props.playerID, index);
   }
 
+  callUna() {
+    this.props.moves.callUna(this.props.playerID);
+  }
+
   render() {
     const isYourTurn = this.props.ctx.currentPlayer === this.props.playerID;
     let yourTurn = '';
 
     if (isYourTurn) {
-      yourTurn = <span><i className="nes-icon heart is-small"></i>Your Turn<i className="nes-icon heart is-small"></i></span>;
+      yourTurn = <span>{this.props.G.reverse ? '< ' : ''}<i className="nes-icon heart is-small"></i>Your Turn<i className="nes-icon heart is-small"></i>{this.props.G.reverse ? '' : ' >'}</span>;
     } else {
-      yourTurn = this.props.matchData[this.props.ctx.currentPlayer].name + "'s Turn"
+      yourTurn = <span>{this.props.G.reverse ? '< ' : ''}{this.props.matchData[this.props.ctx.currentPlayer].name}'s Turn{this.props.G.reverse ? '' : ' >'}</span>
     }
 
     let winner = '';
@@ -67,7 +71,7 @@ export default class Board extends React.Component {
     }
 
     let hand = [];
-    hand = this.props.G.players[this.props.playerID].hand.slice().map((card, index) => {
+    hand = this.props.G.players[this.props.playerID].hand.map((card, index) => {
       return {
         originalIndex: index,
         numberIndex: card.numberIndex,
@@ -77,14 +81,16 @@ export default class Board extends React.Component {
         number: card.number
       };
     });
+    
     hand.sort(sortByNumber).sort(sortByColor);
+
     return (
       <main>
         <div className="container">
           {winner}
           <div className="nes-container with-title">
             <p className={`title ${isYourTurn ? 'nes-text is-error' : ''}`}>{yourTurn}</p>
-            {this.props.matchData.map((player, index) => <span key={index} className="nes-badge"><span className={parseInt(this.props.ctx.currentPlayer) === index ? 'is-success' : 'is-primary'}>{player.name}</span></span>)}
+            {this.props.matchData.map((player, index) => <span key={index} className={this.props.G.players[index].calledUna ? 'called-una nes-badge is-splited' : 'nes-badge is-splited'}><span className={player.isConnected ? (parseInt(this.props.ctx.currentPlayer, 10) === index ? 'is-error' : 'is-primary'): 'is-dark'}>{player.name}</span><span className="is-dark">{this.props.G.players[index].hand.length}</span></span>)}
           </div>
           <div className="text-center">
             <button className="nes-btn card deck mb mt" onClick={() => this.drawCard()}><span><span>DRAW</span><br/>{this.props.G.deck.length}</span></button>
@@ -95,6 +101,7 @@ export default class Board extends React.Component {
               {hand.map((card, index) => <button key={index} className={`card nes-btn mb ${getCardClass(card.color)}`} onClick={() => this.playCard(card.originalIndex)}><span>{card.number}</span></button>)}
           </div> 
         </div>
+        <button id="call-una" className="nes-btn is-success" onClick={() => this.callUna()}>U</button>
       </main>
       
     );
