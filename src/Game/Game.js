@@ -1,4 +1,4 @@
-import { INVALID_MOVE } from 'boardgame.io/core';
+import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];
@@ -83,8 +83,8 @@ export const Una = {
 
     drawCard: {
       move: (G, ctx, playerID) => {
-        if (G.deck.length) {
-          let card = G.deck.pop();
+        if (G.deck.length && (ctx.currentPlayer === playerID)) {
+          const card = G.deck.pop();
           G.players[playerID].hand.push(card);
           G.players[playerID].calledUna = false;
         } else {
@@ -92,6 +92,19 @@ export const Una = {
         }
       },
       client: false
+    },
+
+    punish: {
+      move: (G, ctx, playerID) => {
+        if (G.deck.length >= 4) {
+          const cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
+          G.players[playerID].hand = G.players[playerID].hand.concat(cards);
+        } else {
+          return INVALID_MOVE;
+        }
+      },
+      client: false,
+      noLimit: true
     },
     
     playCard: {
@@ -105,13 +118,13 @@ export const Una = {
             G.skipped = true;
             if (playedCard.type === 'draw2') {
               const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-              let cards = G.deck.splice(0, G.deck.length >= 2 ? 2 : G.deck.length);
+              const cards = G.deck.splice(0, G.deck.length >= 2 ? 2 : G.deck.length);
               G.players[nextPlayerIndex].calledUna = false;
               G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
             }
             if (playedCard.type === 'wilddraw4') {
               const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-              let cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
+              const cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
               G.players[nextPlayerIndex].calledUna = false;
               G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
             }
@@ -120,6 +133,9 @@ export const Una = {
             G.reverse = !G.reverse;
           }
           G.currentCard = playedCard;
+          if(ctx.currentPlayer !== playerID) {
+            ctx.events.pass();
+          }
         } else {
           return INVALID_MOVE;
         }
@@ -130,7 +146,7 @@ export const Una = {
 
   turn: {
     moveLimit: 1,
-    // activePlayers: ActivePlayers.ALL,
+    activePlayers: ActivePlayers.ALL,
     onBegin: (G, ctx) => {
       G.skipped = false;
     },

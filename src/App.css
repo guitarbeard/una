@@ -72,6 +72,8 @@ hr {
     width: auto;
     margin-left: 1em;
     margin-right: 1em;
+    background: none;
+    border: none;
 }
 
 .nes-badge span:first-child, .nes-badge span:last-child {
@@ -139,8 +141,8 @@ hr {
     background-color: #92cc41;
     box-shadow: 0 0.5em #92cc41, 0 -0.5em #92cc41, 0.5em 0 #92cc41, -0.5em 0 #92cc41;
     position: absolute;
-    top: -2em;
-    left: -2.3em;
+    top: -1.5em;
+    left: -1.5em;
     height: 2.7em;
     z-index: 2;
 }
