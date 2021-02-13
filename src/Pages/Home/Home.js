@@ -143,6 +143,7 @@ const Home = (props) => {
           <div className="nes-select">
             <select id="number-of-players" value={num} onChange={(e) => setNum(e.target.value)}>
               <option value="" disabled hidden>Select...</option>
+              <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
               <option value="4">4</option>

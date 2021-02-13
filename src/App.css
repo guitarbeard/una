@@ -48,6 +48,10 @@ hr {
     text-align: center;
 }
 
+.nes-container {
+    padding: 1.5rem 1rem;
+}
+
 .nes-field, .nes-select {
     margin-bottom: 1.5rem;
 }
@@ -124,7 +128,6 @@ hr {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    box-shadow: 0 5px 20px #000;
     width: 44px;
     height: 44px;
 }
@@ -145,4 +148,20 @@ hr {
     left: -1.5em;
     height: 2.7em;
     z-index: 2;
+}
+
+.wild-balloon {
+    padding: 0.3rem;
+    /* box-shadow: 0 5px 20px 5px rgb(0 0 0 / 60%); */
+    z-index: 1;
+}
+
+.wild-balloon .nes-btn {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.nes-balloon.from-left::after,
+.nes-balloon.from-left::before {
+    left: 5.5rem;
 }

@@ -8,7 +8,7 @@ import { DEFAULT_PORT } from "./src/config";
 
 const server = Server({
   games: [Una],
-  db: new FlatFile({ dir: "db", logging: false, ttl: 1000 * 60 * 60 }),
+  //db: new FlatFile({ dir: "db", logging: false, ttl: 1000 * 60 * 60 }),
 });
 
 const PORT = process.env.PORT || DEFAULT_PORT;

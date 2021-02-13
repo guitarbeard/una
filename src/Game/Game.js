@@ -65,7 +65,7 @@ function createSetup(ctx) {
 
 export const Una = {
   name: `${GAME_NAME}`,
-  minPlayers: 2,
+  minPlayers: 1,
   maxPlayers: 8,
   setup: createSetup,
   moves: {
@@ -108,11 +108,11 @@ export const Una = {
     },
     
     playCard: {
-      move: (G, ctx, playerID, cardIndex) => {
+      move: (G, ctx, playerID, cardIndex, color) => {
         if (G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color) {
           let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
           if (playedCard.color === 'wild') {
-            playedCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
+            playedCard.color = color ? color : COLORS[ctx.random.Die(COLORS.length) - 1];
           }
           if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4' || (playedCard.type === 'reverse' && ctx.numPlayers === 2)) {
             G.skipped = true;

@@ -79,7 +79,7 @@ const Room = (props) => {
   };
 
   if (show) {
-    // don't include lobby because game doesn't show game title, game credits... it's fullscreen.
+    // don't include lobby
     return (
       <UnaClient
         matchID={id}
