@@ -20,7 +20,6 @@ function getCardClass(color) {
         cardClass = 'is-wild';
         break;
     }
-
     return cardClass;
 }
 
@@ -118,7 +117,7 @@ export default class Board extends React.Component {
       hand.sort(sortByNumber).sort(sortByColor);
     }
     return (
-      <main>
+      <main className={isYourTurn ? 'your-turn' : ''}>
         <div className="container">
           {winner}
           <div className="nes-container with-title">
@@ -154,7 +153,6 @@ export default class Board extends React.Component {
         </div>
         {this.props.G.players[this.props.playerID] ? <button id="call-una" className="nes-btn is-success" onClick={() => this.callUna()}>U</button> : ''}
       </main>
-      
     );
   }
 }

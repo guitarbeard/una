@@ -18,7 +18,14 @@ header > .container {
 }
 
 main {
-    padding-top: 90px;
+    margin-top: 52px;
+    padding-top: 38px;
+    min-height: calc(100vh - 52px);
+    border: solid 4px white;
+}
+
+main.your-turn {
+    border: dashed 4px #e76e55;
 }
 
 .container {
@@ -31,6 +38,10 @@ main {
 
 section {
     margin-bottom: 3rem;
+}
+
+h1 {
+    margin: 0;
 }
 
 h2 {
@@ -96,8 +107,8 @@ hr {
     font-size: 34px;
     width: 72px;
     height: 100px;
-    margin-left: .5em;
-    margin-right: .5em;
+    margin-left: .4em;
+    margin-right: .4em;
 }
 
 .card > span {
@@ -164,4 +175,17 @@ hr {
 .nes-balloon.from-left::after,
 .nes-balloon.from-left::before {
     left: 5.5rem;
+}
+
+@media (max-width: 767px) {
+    .hand-wrap .card {
+        font-size: 25px;
+        width: 54px;
+        height: 72px;
+        margin-bottom: 0.8em;
+    }
+    #call-una {
+        bottom: 0.8em;
+        right: 0.8em;
+    }
 }

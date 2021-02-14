@@ -1,7 +1,26 @@
 import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
+// import { Timer } from 'interval-timer';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];
+
+// const timerOptions = {
+// 	startTime: 7000,
+// 	endTime: 0,
+// 	updateFrequency: 1000,
+// 	countdown: true
+// };
+
+// const playerTimer = new Timer(timerOptions);
+
+// playerTimer.on('update', () => {
+//   console.log(playerTimer.getTime.seconds);
+//   console.log(Una.moves);
+// });
+
+// playerTimer.on('end', () => {
+//   console.log('Timer has completed!')
+// });
 
 function createDeck(deckLength) {
   const cards = [];
@@ -53,13 +72,14 @@ function createSetup(ctx) {
   let deck = ctx.random.Shuffle(createDeck(1));
   const players =  createPlayers(ctx.numPlayers, deck);
   let currentCard = deck.pop();
-  currentCard.color = COLORS[ctx.random.Die(COLORS.length) - 1];
+  currentCard.color = currentCard.color === 'wild' ? COLORS[ctx.random.Die(COLORS.length) - 1] : currentCard.color;
   return {
     deck,
     players,
     currentCard,
     reverse: false,
-    skipped: true
+    skipped: true,
+    // playerTimeRemaining: 7
   };
 }
 
