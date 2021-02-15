@@ -1,26 +1,17 @@
 import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
 // import { Timer } from 'interval-timer';
+// import { TimerPlugin } from './Timer';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];
 
 // const timerOptions = {
-// 	startTime: 7000,
+// 	startTime: 8000,
 // 	endTime: 0,
 // 	updateFrequency: 1000,
+//   selfAdjust: true,
 // 	countdown: true
 // };
-
-// const playerTimer = new Timer(timerOptions);
-
-// playerTimer.on('update', () => {
-//   console.log(playerTimer.getTime.seconds);
-//   console.log(Una.moves);
-// });
-
-// playerTimer.on('end', () => {
-//   console.log('Timer has completed!')
-// });
 
 function createDeck(deckLength) {
   const cards = [];
@@ -51,9 +42,7 @@ function createPlayers(numPlayers, deck) {
   const players = [];
   for (let i = 0; i < numPlayers; ++i) {
     players.push({
-      name: "",
       hand: deck.splice(0, 7),
-      id: `${i}`,
       calledUna: false
     });
   }
@@ -79,7 +68,7 @@ function createSetup(ctx) {
     currentCard,
     reverse: false,
     skipped: true,
-    // playerTimeRemaining: 7
+    playerTimer: -1
   };
 }
 
@@ -88,7 +77,44 @@ export const Una = {
   minPlayers: 1,
   maxPlayers: 8,
   setup: createSetup,
+  // plugins: [TimerPlugin(() => {
+  //   const playerTimer = new Timer(timerOptions);
+
+  //   const getPlayerTimer = () => playerTimer;
+  //   const getTime = () => {
+  //     console.log("GET", playerTimer.getTime.seconds);
+  //     return playerTimer.getTime.seconds;
+  //   };
+
+  //   return { getPlayerTimer, getTime };
+  // })],
   moves: {
+    // checkTime: {
+    //   move: (G, ctx) => {
+    //     if (ctx.turn > 0) {
+    //       G.playerTimer = ctx.timer.get();
+    //       if (G.deck.length && G.playerTimer <= 0) {
+    //         const card = G.deck.pop();
+    //         G.players[ctx.currentPlayer].hand.push(card);
+    //         G.players[ctx.currentPlayer].calledUna = false;
+    //         ctx.events.pass();
+    //       }
+    //     } else {
+    //       return INVALID_MOVE;
+    //     }
+    //   },
+    //   client: false,
+    //   noLimit: true
+    // },
+
+    pass: {
+      move: (G, ctx) => {
+        ctx.events.pass();
+      },
+      client: false,
+      noLimit: true
+    },
+
     callUna: {
       move: (G, ctx, playerID) => {
         if ((G.players[playerID].hand.length === 2 && playerID === ctx.currentPlayer) || G.players[playerID].hand.length < 2) {
@@ -169,6 +195,11 @@ export const Una = {
     activePlayers: ActivePlayers.ALL,
     onBegin: (G, ctx) => {
       G.skipped = false;
+      // if (ctx.turn > 0) {
+      //   G.playerTimer = 8;
+      //   ctx.timer.reset();
+      //   ctx.timer.start();
+      // }
     },
     order: {
       // Get the initial value of playOrderPos.

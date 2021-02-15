@@ -5,7 +5,7 @@ import { api } from "../../LobbyAPI";
 const Home = (props) => {
   const { history } = props;
   const maxNameLength = 12;
-  const roomIDLength = 11;
+  const roomIDLength = 4;
 
   const [room, setRoom] = useState("");
   const [jName, setJName] = useState("");

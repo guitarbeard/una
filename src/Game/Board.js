@@ -1,5 +1,6 @@
 import React from 'react';
 import { Popover } from 'react-tiny-popover';
+import ReactInterval from 'react-interval';
 
 function getCardClass(color) {
   let cardClass = '';
@@ -36,7 +37,10 @@ function sortByColor(a, b) {
 export default class Board extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {isPopoverOpenIndex: null};
+    this.state = {
+      isPopoverOpenIndex: null,
+      timeRemaining: 7
+    };
   }
 
   drawCard() {
@@ -53,6 +57,9 @@ export default class Board extends React.Component {
       if (this.props.ctx.currentPlayer === this.props.playerID || (card.color === this.props.G.currentCard.color && card.type === this.props.G.currentCard.type && card.number === this.props.G.currentCard.number)) {
         this.props.moves.playCard(this.props.playerID, index, color);
         this.setState({isPopoverOpenIndex: null});
+        if ((this.props.ctx.currentPlayer === this.props.playerID) && (card.color === this.props.G.currentCard.color || card.number === this.props.G.currentCard.number || card.color === 'wild')) {
+          this.setState({timeRemaining: 7});
+        }
       }
     }
   }
@@ -74,6 +81,22 @@ export default class Board extends React.Component {
   setIsPopoverOpen(isPopoverOpenIndex) {
     if (this.props.G.players[this.props.playerID]) {
       this.setState({isPopoverOpenIndex});
+    }
+  }
+
+  checkTime(isYourTurn) {
+    if (isYourTurn) {
+      this.setState({timeRemaining: this.state.timeRemaining - 1});
+      if (this.state.timeRemaining === 0) {
+        this.drawCard();
+        this.setState({timeRemaining: 7});
+      }  
+    } else {
+      this.setState({timeRemaining: 7});
+    }
+     // pass unconnected player but requires original player to be connected
+     if (this.props.playerID === '0' && !this.props.matchData[this.props.ctx.currentPlayer].isConnected) {
+      this.props.moves.pass();
     }
   }
 
@@ -116,6 +139,7 @@ export default class Board extends React.Component {
       });
       hand.sort(sortByNumber).sort(sortByColor);
     }
+    
     return (
       <main className={isYourTurn ? 'your-turn' : ''}>
         <div className="container">
@@ -152,6 +176,9 @@ export default class Board extends React.Component {
           </div> 
         </div>
         {this.props.G.players[this.props.playerID] ? <button id="call-una" className="nes-btn is-success" onClick={() => this.callUna()}>U</button> : ''}
+        <div id="time">{ isYourTurn && !winner ? this.state.timeRemaining : ''}</div>
+        <ReactInterval timeout={1000} enabled={!winner}
+          callback={() => this.checkTime(isYourTurn)} />
       </main>
     );
   }

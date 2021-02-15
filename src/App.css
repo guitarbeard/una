@@ -137,8 +137,8 @@ hr {
 
 #call-una {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 2rem;
+    right: 2rem;
     width: 44px;
     height: 44px;
 }
@@ -177,6 +177,14 @@ hr {
     left: 5.5rem;
 }
 
+#time {
+    position: fixed;
+    top: 0;
+    right: 1rem;
+    font-size: 2rem;
+    z-index: 10;
+}
+
 @media (max-width: 767px) {
     .hand-wrap .card {
         font-size: 25px;
@@ -185,7 +193,7 @@ hr {
         margin-bottom: 0.8em;
     }
     #call-una {
-        bottom: 0.8em;
-        right: 0.8em;
+        bottom: 1rem;
+        right: 1rem;
     }
 }
