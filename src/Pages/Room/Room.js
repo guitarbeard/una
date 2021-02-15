@@ -65,8 +65,8 @@ const Room = (props) => {
   }, [copied, id]);
 
   const copyToClipboard = (e) => {
-    const textArea = document.getElementById("roomID");
-    textArea.select();
+    const roomID = document.getElementById("roomID");
+    roomID.select();
     document.execCommand("copy");
     e.target.focus();
     setCopied(true);
@@ -97,8 +97,8 @@ const Room = (props) => {
             <p className="title">Invite Your Friends</p>
             <p className="mb">Game will begin once all {players.length === 0 ? "" : ` ${players.length}`} players have joined.</p>
             <div className="nes-field">
-              <label htmlFor="roomID">Room ID</label>
-              <input type="text" className="nes-input" id="roomID" value={id} readOnly />
+              <label htmlFor="roomID">Join URL</label>
+              <input type="text" className="nes-input" id="roomID" value={`${origin}/join/${id}`} readOnly />
             </div>
             <button
               className={classNames("nes-btn", { "is-disabled": copied })}

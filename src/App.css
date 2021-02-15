@@ -177,6 +177,10 @@ hr {
     left: 5.5rem;
 }
 
+#roomIdentification {
+    text-transform: uppercase;
+}
+
 #time {
     position: fixed;
     top: 0;

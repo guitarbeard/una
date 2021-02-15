@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import Lobby from "../Lobby/Lobby";
 import { api } from "../../LobbyAPI";
 
 const Home = (props) => {
   const { history } = props;
+  const { joinID } = useParams();
+  const jNameInputRef = useRef();
   const maxNameLength = 12;
   const roomIDLength = 4;
 
@@ -17,6 +20,10 @@ const Home = (props) => {
 
   // handle URL to a room that doesn't exist
   useEffect(() => {
+    if (joinID) {
+      jNameInputRef.current.focus();
+    }
+
     let timer;
     if (history.location.state && history.location.state.invalidRoom) {
       setErrMsg("room does not exist!");
@@ -29,7 +36,7 @@ const Home = (props) => {
     return () => {
       clearTimeout(timer);
     };
-  }, [history]);
+  }, [history, joinID]);
 
   // restrict inputs, specifically spaces (inspired by https://secret-hitler.online/)
   const handleKeyDown = (e, text) => {
@@ -91,7 +98,7 @@ const Home = (props) => {
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    joinRoom(room, jName);
+    joinRoom(joinID ? joinID : room.toUpperCase(), jName);
   };
 
   return (
@@ -109,6 +116,7 @@ const Home = (props) => {
               autoComplete="off"
               onKeyDown={(e) => handleKeyDown(e)}
               onChange={(e) => setRoom(e.target.value)}
+              value={joinID ? joinID : room}
               className="nes-input"
             />
           </div>
@@ -123,13 +131,14 @@ const Home = (props) => {
               onKeyDown={(e) => handleKeyDown(e, jName)}
               onChange={(e) => setJName(e.target.value)}
               onPaste={(e) => e.preventDefault()}
+              ref={jNameInputRef}
               className="nes-input"
             />
           </div>
           <button
             type="submit"
-            className={`nes-btn ${(room.length !== roomIDLength || jName.length === 0) ? 'is-disabled' : 'is-primary'}`}
-            disabled={room.length !== roomIDLength || jName.length === 0}
+            className={`nes-btn ${((room.length !== roomIDLength && !joinID) || jName.length === 0) ? 'is-disabled' : 'is-primary'}`}
+            disabled={(room.length !== roomIDLength && !joinID) || jName.length === 0}
           >
             Join
           </button>

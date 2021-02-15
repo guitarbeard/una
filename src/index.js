@@ -15,6 +15,9 @@ const App = () => {
       <Route exact path="/">
         <Home history={history} />
       </Route>
+      <Route exact path="/join/:joinID">
+        <Home history={history} />
+      </Route>
       <Route exact path="/rooms/:id">
         <Room history={history} />
       </Route>
