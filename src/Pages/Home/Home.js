@@ -9,11 +9,11 @@ const Home = (props) => {
   const jNameInputRef = useRef();
   const maxNameLength = 12;
   const roomIDLength = 4;
+  const numPlayers = 20;
 
   const [room, setRoom] = useState("");
   const [jName, setJName] = useState("");
   const jNameCount = maxNameLength - jName.length;
-  const [num, setNum] = useState("");
   const [cName, setCName] = useState("");
   const cNameCount = maxNameLength - cName.length;
   const [errMsg, setErrMsg] = useState("");
@@ -91,14 +91,14 @@ const Home = (props) => {
 
   const createRoom = (e) => {
     e.preventDefault();
-    api.createRoom(num).then((roomID) => {
+    api.createRoom(numPlayers).then((roomID) => {
       joinRoom(roomID, cName);
     });
   };
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    joinRoom(joinID ? joinID : room.toUpperCase(), jName);
+    joinRoom(joinID ? joinID.toUpperCase() : room.toUpperCase(), jName);
   };
 
   return (
@@ -148,20 +148,6 @@ const Home = (props) => {
       <section>
         <form onSubmit={createRoom}>
           <h2>Create Game</h2>
-          <label htmlFor="number-of-players"># of players: {num}</label>
-          <div className="nes-select">
-            <select id="number-of-players" value={num} onChange={(e) => setNum(e.target.value)}>
-              <option value="" disabled hidden>Select...</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-            </select>
-          </div>
           <div className="nes-field">
             <label htmlFor="create-name">Username {cNameCount}</label>
             <input
@@ -176,6 +162,7 @@ const Home = (props) => {
               className="nes-input"
             />
           </div>
+          <p><small className="mb">Max Players: 20</small></p>
           <button
             type="submit"
             className={`nes-btn ${cName.length === 0 ? 'is-disabled' : 'is-primary'}`}

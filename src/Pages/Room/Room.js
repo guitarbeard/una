@@ -31,9 +31,8 @@ const Room = (props) => {
       api.getPlayers(id).then(
         (players) => {
           setPlayers(players);
-          const currPlayers = players.filter((player) => player.name); // only current players have a name field
-          if (currPlayers.length === players.length) {
-            setShow(true); // everyone has joined, show them the board
+          if (players[0].hasOwnProperty('data') && players[0].data.gameStarted) {
+            setShow(true);
           }
         },
         () => {
@@ -78,6 +77,10 @@ const Room = (props) => {
     });
   };
 
+  const startGame = () => {
+    api.updatePlayer(id, localStorage.getItem("id"), localStorage.getItem("credentials"), {gameStarted: true});
+  };
+
   if (show) {
     // don't include lobby
     return (
@@ -95,7 +98,7 @@ const Room = (props) => {
           <h2>Waiting Room</h2>
           <div className="nes-container with-title">
             <p className="title">Invite Your Friends</p>
-            <p className="mb">Game will begin once all {players.length === 0 ? "" : ` ${players.length}`} players have joined.</p>
+            <p className="mb">Max Players: 20</p>
             <div className="nes-field">
               <label htmlFor="roomID">Join URL</label>
               <input type="text" className="nes-input" id="roomID" value={`${origin}/join/${id}`} readOnly />
@@ -111,13 +114,14 @@ const Room = (props) => {
           <div className="players-list mt mb">
             {players.map((player, index) => {
               if (player.name) {
-                return <span key={index} className="nes-badge"><span className="is-primary">{player.name} {player.name === localStorage.getItem("name") ? " (You)" : ""}</span></span>;
+                return <span key={index} className="nes-badge"><span className="is-primary">{player.name}{player.name === localStorage.getItem("name") ? " (You)" : ""}</span></span>;
               } else {
                 return '';
               }
             })}
           </div>
           <div>
+            {localStorage.getItem("id") === "0" ? <button className="nes-btn is-primary mr" onClick={startGame}>Start Game</button> : ''}
             <button className="nes-btn is-error" onClick={leaveRoom}>
               Leave
             </button>

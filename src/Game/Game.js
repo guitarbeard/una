@@ -1,20 +1,10 @@
 import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
-// import { Timer } from 'interval-timer';
-// import { TimerPlugin } from './Timer';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];
 
-// const timerOptions = {
-// 	startTime: 8000,
-// 	endTime: 0,
-// 	updateFrequency: 1000,
-//   selfAdjust: true,
-// 	countdown: true
-// };
-
 function createDeck(deckLength) {
-  const cards = [];
+  let cards = [];
   for (let index = 0; index < deckLength; index++) {
     for(let color of COLORS){
       // 1x 0 and 2x 1-9
@@ -38,74 +28,57 @@ function createDeck(deckLength) {
   return cards;
 }
 
-function createPlayers(numPlayers, deck) {
-  const players = [];
-  for (let i = 0; i < numPlayers; ++i) {
-    players.push({
-      hand: deck.splice(0, 7),
-      calledUna: false
-    });
+function createPlayer(G, ctx, playerID) {
+  if (G.deck.length < 7) {
+    const deck = ctx.random.Shuffle(createDeck(1));
+    G.deck = G.deck.concat(deck);
   }
-  return players;
+  const cards = G.deck.splice(0, 7);
+  G.players[playerID] = {
+    hand: cards,
+    calledUna: false,
+    wins: 0
+  }
 }
 
-function getNextPlayerIndex(playOrderPos, numPlayers, reverse) {
-  let nextPlayerIndex = (playOrderPos + 1) % numPlayers;
-  if(reverse) {
-    nextPlayerIndex = (playOrderPos === 0) ? (numPlayers - 1) : (playOrderPos - 1) ;
+function getNextPlayerIndex(playOrderPos, G) {
+  let nextPlayerIndex = (playOrderPos + 1) % G.players.length;
+  if(G.reverse) {
+    nextPlayerIndex = (playOrderPos === 0) ? (G.players.length - 1) : (playOrderPos - 1) ;
   }
   return nextPlayerIndex;
 }
 
 function createSetup(ctx) {
   let deck = ctx.random.Shuffle(createDeck(1));
-  const players =  createPlayers(ctx.numPlayers, deck);
   let currentCard = deck.pop();
   currentCard.color = currentCard.color === 'wild' ? COLORS[ctx.random.Die(COLORS.length) - 1] : currentCard.color;
   return {
+    gameEnded: false,
+    currentWinner: null,
     deck,
-    players,
+    players: [],
     currentCard,
     reverse: false,
-    skipped: true,
-    playerTimer: -1
+    skipped: true
   };
 }
 
 export const Una = {
   name: `${GAME_NAME}`,
   minPlayers: 1,
-  maxPlayers: 8,
+  maxPlayers: 20,
   setup: createSetup,
-  // plugins: [TimerPlugin(() => {
-  //   const playerTimer = new Timer(timerOptions);
-
-  //   const getPlayerTimer = () => playerTimer;
-  //   const getTime = () => {
-  //     console.log("GET", playerTimer.getTime.seconds);
-  //     return playerTimer.getTime.seconds;
-  //   };
-
-  //   return { getPlayerTimer, getTime };
-  // })],
   moves: {
-    // checkTime: {
-    //   move: (G, ctx) => {
-    //     if (ctx.turn > 0) {
-    //       G.playerTimer = ctx.timer.get();
-    //       if (G.deck.length && G.playerTimer <= 0) {
-    //         const card = G.deck.pop();
-    //         G.players[ctx.currentPlayer].hand.push(card);
-    //         G.players[ctx.currentPlayer].calledUna = false;
-    //         ctx.events.pass();
-    //       }
-    //     } else {
-    //       return INVALID_MOVE;
-    //     }
-    //   },
-    //   client: false,
-    //   noLimit: true
-    // },
+    playerJoin: {
+      move: (G, ctx, playerID) => {
+        if (!G.players[playerID]) {
+          createPlayer(G, ctx, playerID);
+        }
+      },
+      client: false,
+      noLimit: true
+    },
 
     pass: {
       move: (G, ctx) => {
@@ -129,9 +102,14 @@ export const Una = {
 
     drawCard: {
       move: (G, ctx, playerID) => {
-        if (G.deck.length && (ctx.currentPlayer === playerID)) {
-          const card = G.deck.pop();
-          G.players[playerID].hand.push(card);
+        let drawLength = G.players[playerID].hand.length ? 1 : 7;
+        if (G.deck.length < drawLength) {
+          const deck = ctx.random.Shuffle(createDeck(1));
+          G.deck = G.deck.concat(deck);
+        }
+        if (ctx.currentPlayer === playerID) {
+          const cards = G.deck.splice(0, drawLength);
+          G.players[playerID].hand = G.players[playerID].hand.concat(cards);
           G.players[playerID].calledUna = false;
         } else {
           return INVALID_MOVE;
@@ -142,12 +120,12 @@ export const Una = {
 
     punish: {
       move: (G, ctx, playerID) => {
-        if (G.deck.length >= 4) {
-          const cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
-          G.players[playerID].hand = G.players[playerID].hand.concat(cards);
-        } else {
-          return INVALID_MOVE;
+        if (G.deck.length < 4) {
+          const deck = ctx.random.Shuffle(createDeck(1));
+          G.deck = G.deck.concat(deck);
         }
+        const cards = G.deck.splice(0, 4);
+        G.players[playerID].hand = G.players[playerID].hand.concat(cards);
       },
       client: false,
       noLimit: true
@@ -160,17 +138,25 @@ export const Una = {
           if (playedCard.color === 'wild') {
             playedCard.color = color ? color : COLORS[ctx.random.Die(COLORS.length) - 1];
           }
-          if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4' || (playedCard.type === 'reverse' && ctx.numPlayers === 2)) {
+          if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4' || (playedCard.type === 'reverse' && G.players.length === 2)) {
             G.skipped = true;
             if (playedCard.type === 'draw2') {
-              const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-              const cards = G.deck.splice(0, G.deck.length >= 2 ? 2 : G.deck.length);
+              const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, G);
+              if (G.deck.length < 2) {
+                const deck = ctx.random.Shuffle(createDeck(1));
+                G.deck = G.deck.concat(deck);
+              }
+              const cards = G.deck.splice(0, 2);
               G.players[nextPlayerIndex].calledUna = false;
               G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
             }
             if (playedCard.type === 'wilddraw4') {
-              const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-              const cards = G.deck.splice(0, G.deck.length >= 4 ? 4 : G.deck.length);
+              const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, G);
+              if (G.deck.length < 4) {
+                const deck = ctx.random.Shuffle(createDeck(1));
+                G.deck = G.deck.concat(deck);
+              }
+              const cards = G.deck.splice(0, 4);
               G.players[nextPlayerIndex].calledUna = false;
               G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
             }
@@ -195,11 +181,15 @@ export const Una = {
     activePlayers: ActivePlayers.ALL,
     onBegin: (G, ctx) => {
       G.skipped = false;
-      // if (ctx.turn > 0) {
-      //   G.playerTimer = 8;
-      //   ctx.timer.reset();
-      //   ctx.timer.start();
-      // }
+    },
+    onEnd: (G, ctx) => {
+      if (G.players.length && !G.players[ctx.playOrderPos].hand.length) {
+        G.currentWinner = ctx.playOrderPos;
+        G.players[ctx.playOrderPos].wins++;
+      }
+      if (G.players.length && G.players[ctx.playOrderPos].hand.length) {
+        G.currentWinner = null;
+      }
     },
     order: {
       // Get the initial value of playOrderPos.
@@ -210,18 +200,9 @@ export const Una = {
       // This is called at the end of each turn.
       // The phase ends if this returns undefined.
       next: (G, ctx) => {
-        const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, ctx.numPlayers, G.reverse);
-        return G.skipped ? getNextPlayerIndex(nextPlayerIndex, ctx.numPlayers, G.reverse) : nextPlayerIndex;        
+        const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, G);
+        return G.skipped ? getNextPlayerIndex(nextPlayerIndex, G) : nextPlayerIndex;        
       }
     },
-  },
-
-  endIf: (G, ctx) => {
-    if (!G.players[ctx.currentPlayer].hand.length) {
-      return { winner: ctx.currentPlayer };
-    }
-    if (!G.deck.length) {
-      return { message: 'Out of Cards' };
-    }
-  },
+  }
 };

@@ -43,6 +43,15 @@ export class LobbyAPI {
     }
   }
 
+  // POST /games/{game_name}/{room_id}/join : join a match
+  async updatePlayer(roomID, id, credentials, data) {
+    try {
+      await this.api.post(roomID + "/update", { json: { playerID: id, credentials, data } }).json();
+    } catch (err) {
+      console.log("failed to join room:", err);
+    }
+  }
+
   // GET /games/{game_name}/{room_id} : get specific match by its matchID
   async getPlayers(roomID) {
     const res = await this.api.get(roomID).json();

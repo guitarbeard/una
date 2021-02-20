@@ -64,6 +64,10 @@ export default class Board extends React.Component {
     }
   }
 
+  playerJoin() {
+    this.props.moves.playerJoin(this.props.playerID);
+  }
+
   callUna() {
     if (this.props.G.players[this.props.playerID]) {
       this.props.moves.callUna(this.props.playerID);
@@ -100,13 +104,19 @@ export default class Board extends React.Component {
     }
   }
 
+  componentDidMount() {
+    if (this.props.playerID && this.props.matchData[this.props.playerID].hasOwnProperty('name') && !this.props.G.players[this.props.playerID]) {
+      this.playerJoin();
+    }
+  }
+
   render() {
     const isYourTurn = this.props.ctx.currentPlayer === this.props.playerID;
     let yourTurn = '';
 
     if (isYourTurn) {
       yourTurn = <span>{this.props.G.reverse ? '< ' : ''}<i className="nes-icon heart is-small"></i>Your Turn<i className="nes-icon heart is-small"></i>{this.props.G.reverse ? '' : ' >'}</span>;
-    } else {
+    } else if(this.props.matchData[this.props.ctx.currentPlayer].hasOwnProperty('name')) {
       yourTurn = <span>{this.props.G.reverse ? '< ' : ''}{this.props.matchData[this.props.ctx.currentPlayer].name}'s Turn{this.props.G.reverse ? '' : ' >'}</span>
     }
 
@@ -139,14 +149,14 @@ export default class Board extends React.Component {
       });
       hand.sort(sortByNumber).sort(sortByColor);
     }
-    
+
     return (
       <main className={isYourTurn ? 'your-turn' : ''}>
         <div className="container">
           {winner}
           <div className="nes-container with-title">
             <p className={`title ${isYourTurn ? 'nes-text is-error' : ''}`}>{yourTurn}</p>
-            {this.props.matchData.map((player, index) => <button key={index} onClick={() => this.punish(index)} className={this.props.G.players[index].calledUna ? 'called-una nes-badge is-splited' : 'nes-badge is-splited'}><span className={player.isConnected ? (parseInt(this.props.ctx.currentPlayer, 10) === index ? 'is-error' : 'is-primary'): 'is-dark'}>{player.name}</span><span className="is-dark">{this.props.G.players[index].hand.length}</span></button>)}
+            {this.props.matchData.map((player, index) => player.hasOwnProperty('name') && this.props.G.players[index] ? <button key={index} onClick={() => this.punish(index)} className={this.props.G.players[index].calledUna ? 'called-una nes-badge is-splited' : 'nes-badge is-splited'}><span className={player.isConnected ? (parseInt(this.props.ctx.currentPlayer, 10) === index ? 'is-error' : 'is-primary'): 'is-dark'}>{player.name}{this.props.G.players[index].wins ? `(${this.props.G.players[index].wins})` : ''}</span><span className="is-dark">{this.props.G.players[index].hand.length}</span></button> : '')}
           </div>
           <div className="text-center">
             <button className="nes-btn card deck mb mt" onClick={() => this.drawCard()}><span><span>DRAW</span><br/>{this.props.G.deck.length}</span></button>
@@ -177,8 +187,7 @@ export default class Board extends React.Component {
         </div>
         {this.props.G.players[this.props.playerID] ? <button id="call-una" className="nes-btn is-success" onClick={() => this.callUna()}>U</button> : ''}
         <div id="time">{ isYourTurn && !winner ? this.state.timeRemaining : ''}</div>
-        <ReactInterval timeout={1000} enabled={!winner}
-          callback={() => this.checkTime(isYourTurn)} />
+        <ReactInterval timeout={1000} enabled={!winner} callback={() => this.checkTime(isYourTurn)} />
       </main>
     );
   }
