@@ -111,9 +111,9 @@ export default class Board extends React.Component {
   }
 
   render() {
-    const isYourTurn = this.props.ctx.currentPlayer === this.props.playerID;
-    let yourTurn = '';
+    const isYourTurn = parseInt(this.props.ctx.currentPlayer, 10) === parseInt(this.props.playerID, 10);
 
+    let yourTurn = '';
     if (isYourTurn) {
       yourTurn = <span>{this.props.G.reverse ? '< ' : ''}<i className="nes-icon heart is-small"></i>Your Turn<i className="nes-icon heart is-small"></i>{this.props.G.reverse ? '' : ' >'}</span>;
     } else if(this.props.matchData[this.props.ctx.currentPlayer].hasOwnProperty('name')) {
@@ -121,18 +121,9 @@ export default class Board extends React.Component {
     }
 
     let winner = '';
-    if (this.props.ctx.gameover) {
-      if (this.props.ctx.gameover.winner !== undefined) {
-        winner = <h2 className="text-center">{this.props.matchData[this.props.ctx.gameover.winner].name} WINS!!!</h2>;
-        if (isYourTurn) {
-          yourTurn = <span><i className="nes-icon trophy is-small"></i>YOU WIN!!!<i className="nes-icon trophy is-small"></i></span>;
-        } else {
-          yourTurn = <span><i className="nes-icon close is-small"></i>YOU LOSE!!!<i className="nes-icon close is-small"></i></span>;
-        }
-      } else if(this.props.ctx.gameover.message !== undefined) {
-        winner = <h2 className="text-center">DRAW</h2>;
-        yourTurn = <span><i className="nes-icon heart is-empty is-small"></i>{this.props.ctx.gameover.message}<i className="nes-icon heart is-empty is-small"></i></span>;
-      }      
+    if (this.props.G.currentWinner !== null) {
+      const youWin = parseInt(this.props.G.currentWinner, 10)  === parseInt(this.props.playerID, 10);
+      winner = <h2 className="text-center"><i className="nes-icon trophy is-med"></i>{youWin ? 'YOU WIN!!!' : `${this.props.matchData[this.props.G.currentWinner].name} WINS!!!`}<i className="nes-icon trophy is-med"></i></h2>;
     }
 
     let hand = [];
@@ -159,7 +150,7 @@ export default class Board extends React.Component {
             {this.props.matchData.map((player, index) => player.hasOwnProperty('name') && this.props.G.players[index] ? <button key={index} onClick={() => this.punish(index)} className={this.props.G.players[index].calledUna ? 'called-una nes-badge is-splited' : 'nes-badge is-splited'}><span className={player.isConnected ? (parseInt(this.props.ctx.currentPlayer, 10) === index ? 'is-error' : 'is-primary'): 'is-dark'}>{player.name}{this.props.G.players[index].wins ? `(${this.props.G.players[index].wins})` : ''}</span><span className="is-dark">{this.props.G.players[index].hand.length}</span></button> : '')}
           </div>
           <div className="text-center">
-            <button className="nes-btn card deck mb mt" onClick={() => this.drawCard()}><span><span>DRAW</span><br/>{this.props.G.deck.length}</span></button>
+            <button className="nes-btn card deck mb mt" onClick={() => this.drawCard()}><span>DRAW<br/>CARD</span></button>
             <div className={`discard card nes-btn mb mt ${getCardClass(this.props.G.currentCard.color)}`}><span>{this.props.G.currentCard.number}</span></div>
           </div>
           <hr/>
@@ -186,8 +177,8 @@ export default class Board extends React.Component {
           </div> 
         </div>
         {this.props.G.players[this.props.playerID] ? <button id="call-una" className="nes-btn is-success" onClick={() => this.callUna()}>U</button> : ''}
-        <div id="time">{ isYourTurn && !winner ? this.state.timeRemaining : ''}</div>
-        <ReactInterval timeout={1000} enabled={!winner} callback={() => this.checkTime(isYourTurn)} />
+        <div id="time">{ isYourTurn ? this.state.timeRemaining : ''}</div>
+        <ReactInterval timeout={1000} enabled={true} callback={() => this.checkTime(isYourTurn)} />
       </main>
     );
   }

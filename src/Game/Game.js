@@ -1,44 +1,68 @@
 import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
+import { func } from 'prop-types';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];
 
-function createDeck(deckLength) {
+function createDeck() {
   let cards = [];
-  for (let index = 0; index < deckLength; index++) {
-    for(let color of COLORS){
-      // 1x 0 and 2x 1-9
-      for(let i=0;i<=9;i+=.5){
-        cards.push({numberIndex: i, colorIndex: COLORS.indexOf(color), type:"regular", color, number:Math.ceil(i)});
-      }
-      
-      // 2x each action card
-      for(let i=0;i<2;i++){
-        cards.push({numberIndex: 10, colorIndex: COLORS.indexOf(color), type:"reverse", color, number:"R"});
-        cards.push({numberIndex: 11, colorIndex: COLORS.indexOf(color), type:"skip", color, number:">"});
-        cards.push({numberIndex: 12, colorIndex: COLORS.indexOf(color), type:"draw2", color, number:"+2"});
-      }
-
-      // Wild cards once
-      cards.push({numberIndex: 13, colorIndex: 4, type:"wild", color:"wild", number:"?"});
-      // Wild+4 cards once
-      cards.push({numberIndex: 13, colorIndex: 4, type:"wilddraw4", color:"wild", number:"+4"});
+  for(let color of COLORS){
+    // 1x 0 and 2x 1-9
+    for(let i=0;i<=9;i+=.5){
+      cards.push({numberIndex: i, colorIndex: COLORS.indexOf(color), type:"regular", color, number:Math.ceil(i)});
     }
+    
+    // 2x each action card
+    for(let i=0;i<2;i++){
+      cards.push({numberIndex: 10, colorIndex: COLORS.indexOf(color), type:"reverse", color, number:"R"});
+      cards.push({numberIndex: 11, colorIndex: COLORS.indexOf(color), type:"skip", color, number:">"});
+      cards.push({numberIndex: 12, colorIndex: COLORS.indexOf(color), type:"draw2", color, number:"+2"});
+    }
+
+    // Wild cards once
+    cards.push({numberIndex: 13, colorIndex: 4, type:"wild", color:"wild", number:"?"});
+    // Wild+4 cards once
+    cards.push({numberIndex: 13, colorIndex: 4, type:"wilddraw4", color:"wild", number:"+4"});
   }
   return cards;
 }
 
-function createPlayer(G, ctx, playerID) {
-  if (G.deck.length < 7) {
-    const deck = ctx.random.Shuffle(createDeck(1));
+function drawCards(G, ctx, cardAmount) {
+  if (G.deck.length < cardAmount) {
+    const deck = ctx.random.Shuffle(createDeck());
     G.deck = G.deck.concat(deck);
   }
-  const cards = G.deck.splice(0, 7);
+  const cards = G.deck.splice(0, cardAmount);
+  return cards;
+}
+
+function addCardsToPlayer(G, ctx, playerID, drawLength) {
+  G.players[playerID].hand = G.players[playerID].hand.concat(drawCards(G, ctx, drawLength));
+  G.players[playerID].calledUna = false;
+}
+
+function createPlayer(G, ctx, playerID) {
   G.players[playerID] = {
-    hand: cards,
+    hand: drawCards(G, ctx, 7),
     calledUna: false,
     wins: 0
   }
+}
+
+function canPlayCard(G, playerID, cardIndex) {
+  return G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color;
+}
+
+function canCallUna(G, ctx, playerID) {
+  return (G.players[playerID].hand.length === 2 && playerID === ctx.currentPlayer) || G.players[playerID].hand.length < 2;
+}
+
+function isSkipCard(G, playedCard) {
+  return playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4' || (playedCard.type === 'reverse' && G.players.length === 2);
+}
+
+function getRandomColor(ctx) {
+  return COLORS[ctx.random.Die(COLORS.length) - 1];
 }
 
 function getNextPlayerIndex(playOrderPos, G) {
@@ -50,9 +74,9 @@ function getNextPlayerIndex(playOrderPos, G) {
 }
 
 function createSetup(ctx) {
-  let deck = ctx.random.Shuffle(createDeck(1));
+  let deck = ctx.random.Shuffle(createDeck());
   let currentCard = deck.pop();
-  currentCard.color = currentCard.color === 'wild' ? COLORS[ctx.random.Die(COLORS.length) - 1] : currentCard.color;
+  currentCard.color = currentCard.color === 'wild' ? getRandomColor(ctx) : currentCard.color;
   return {
     gameEnded: false,
     currentWinner: null,
@@ -90,7 +114,7 @@ export const Una = {
 
     callUna: {
       move: (G, ctx, playerID) => {
-        if ((G.players[playerID].hand.length === 2 && playerID === ctx.currentPlayer) || G.players[playerID].hand.length < 2) {
+        if (canCallUna(G, ctx, playerID)) {
           G.players[playerID].calledUna = true;
         } else {
           return INVALID_MOVE;
@@ -103,14 +127,8 @@ export const Una = {
     drawCard: {
       move: (G, ctx, playerID) => {
         let drawLength = G.players[playerID].hand.length ? 1 : 7;
-        if (G.deck.length < drawLength) {
-          const deck = ctx.random.Shuffle(createDeck(1));
-          G.deck = G.deck.concat(deck);
-        }
         if (ctx.currentPlayer === playerID) {
-          const cards = G.deck.splice(0, drawLength);
-          G.players[playerID].hand = G.players[playerID].hand.concat(cards);
-          G.players[playerID].calledUna = false;
+          addCardsToPlayer(G, ctx, playerID, drawLength);
         } else {
           return INVALID_MOVE;
         }
@@ -120,12 +138,9 @@ export const Una = {
 
     punish: {
       move: (G, ctx, playerID) => {
-        if (G.deck.length < 4) {
-          const deck = ctx.random.Shuffle(createDeck(1));
-          G.deck = G.deck.concat(deck);
+        if (G.players.length && G.players[playerID].hand.length === 1) {
+          addCardsToPlayer(G, ctx, playerID, 4);
         }
-        const cards = G.deck.splice(0, 4);
-        G.players[playerID].hand = G.players[playerID].hand.concat(cards);
       },
       client: false,
       noLimit: true
@@ -133,32 +148,20 @@ export const Una = {
     
     playCard: {
       move: (G, ctx, playerID, cardIndex, color) => {
-        if (G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color) {
+        if (canPlayCard(G, playerID, cardIndex)) {
           let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
           if (playedCard.color === 'wild') {
-            playedCard.color = color ? color : COLORS[ctx.random.Die(COLORS.length) - 1];
+            playedCard.color = color ? color : getRandomColor(ctx);
           }
-          if (playedCard.type === 'draw2' || playedCard.type === 'skip' || playedCard.type === 'wilddraw4' || (playedCard.type === 'reverse' && G.players.length === 2)) {
+          if (isSkipCard(G, playedCard)) {
             G.skipped = true;
             if (playedCard.type === 'draw2') {
               const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, G);
-              if (G.deck.length < 2) {
-                const deck = ctx.random.Shuffle(createDeck(1));
-                G.deck = G.deck.concat(deck);
-              }
-              const cards = G.deck.splice(0, 2);
-              G.players[nextPlayerIndex].calledUna = false;
-              G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
+              addCardsToPlayer(G, ctx, nextPlayerIndex, 2);
             }
             if (playedCard.type === 'wilddraw4') {
               const nextPlayerIndex = getNextPlayerIndex(ctx.playOrderPos, G);
-              if (G.deck.length < 4) {
-                const deck = ctx.random.Shuffle(createDeck(1));
-                G.deck = G.deck.concat(deck);
-              }
-              const cards = G.deck.splice(0, 4);
-              G.players[nextPlayerIndex].calledUna = false;
-              G.players[nextPlayerIndex].hand = G.players[nextPlayerIndex].hand.concat(cards);
+              addCardsToPlayer(G, ctx, nextPlayerIndex, 4);
             }
           }
           if (playedCard.type === 'reverse') {
@@ -183,11 +186,11 @@ export const Una = {
       G.skipped = false;
     },
     onEnd: (G, ctx) => {
-      if (G.players.length && !G.players[ctx.playOrderPos].hand.length) {
+      if (G.players.length && !G.players[ctx.playOrderPos].hand.length && G.currentWinner === null) {
         G.currentWinner = ctx.playOrderPos;
         G.players[ctx.playOrderPos].wins++;
       }
-      if (G.players.length && G.players[ctx.playOrderPos].hand.length) {
+      if (G.players.length && G.currentWinner !== null && G.players[G.currentWinner].hand.length) {
         G.currentWinner = null;
       }
     },

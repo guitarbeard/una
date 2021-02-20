@@ -121,11 +121,7 @@ hr {
 .deck {
    width: 100px;
    height: 140px;
-   font-size: 30px;
-}
-
-.deck > span > span {
-    font-size: 22px;
+   font-size: 22px;
 }
 
 .discard {
