@@ -47,7 +47,7 @@ export default class Board extends React.Component {
     if (this.props.G.players[this.props.playerID]) {
       if (this.props.ctx.currentPlayer === this.props.playerID) {
         this.props.moves.drawCard(this.props.playerID);
-        this.setState({isPopoverOpenIndex: null});
+        this.setState({isPopoverOpenIndex: null, timeRemaining: 7});
       }
     }
   }
@@ -93,7 +93,6 @@ export default class Board extends React.Component {
       this.setState({timeRemaining: this.state.timeRemaining - 1});
       if (this.state.timeRemaining === 0) {
         this.drawCard();
-        this.setState({timeRemaining: 7});
       }  
     } else {
       this.setState({timeRemaining: 7});

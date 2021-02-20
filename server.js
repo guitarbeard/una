@@ -10,7 +10,7 @@ const customAlphabet = require("nanoid-good").customAlphabet(en);
 
 const server = Server({
   games: [Una],
-  // db: new FlatFile({ dir: "db", logging: false, ttl: 1000 * 60 * 60 }),
+  db: new FlatFile({ dir: "db", logging: false, ttl: 1000 * 60 * 60 }),
   uuid: customAlphabet("ABCDEFGHJKMNOPQRSTUVWXYZ0123456789", 4)
 });
 
