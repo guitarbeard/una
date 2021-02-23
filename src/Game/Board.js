@@ -2,28 +2,6 @@ import React from 'react';
 import { Popover } from 'react-tiny-popover';
 import ReactInterval from 'react-interval';
 
-function getCardClass(color) {
-  let cardClass = '';
-    switch (color) {
-      case 'blue':
-        cardClass = 'is-primary';
-        break;
-      case 'red':
-        cardClass = 'is-error';
-        break;
-      case 'green':
-        cardClass = 'is-success';
-        break;
-      case 'yellow':
-        cardClass = 'is-warning';
-        break;
-      default:
-        cardClass = 'is-wild';
-        break;
-    }
-    return cardClass;
-}
-
 function sortByNumber(a, b) {
   const compare = a.numberIndex - b.numberIndex;
   return compare;
@@ -114,16 +92,15 @@ export default class Board extends React.Component {
 
     let yourTurn = '';
     if (isYourTurn) {
-      yourTurn = <span>{this.props.G.reverse ? '< ' : ''}<i className="nes-icon heart is-small"></i>Your Turn<i className="nes-icon heart is-small"></i>{this.props.G.reverse ? '' : ' >'}</span>;
-    } else if(this.props.matchData[this.props.ctx.currentPlayer].hasOwnProperty('name')) {
-      yourTurn = <span>{this.props.G.reverse ? '< ' : ''}{this.props.matchData[this.props.ctx.currentPlayer].name}'s Turn{this.props.G.reverse ? '' : ' >'}</span>
-    }
-
-    let winner = '';
-    if (this.props.G.currentWinner !== null) {
-      const youWin = parseInt(this.props.G.currentWinner, 10)  === parseInt(this.props.playerID, 10);
-      winner = <h2 className="text-center"><i className="nes-icon trophy is-med"></i>{youWin ? 'YOU WIN!!!' : `${this.props.matchData[this.props.G.currentWinner].name} WINS!!!`}<i className="nes-icon trophy is-med"></i></h2>;
-    }
+      yourTurn = <div id="turn"><marquee>⭐ Your Turn ⭐</marquee></div>;
+      if (this.props.G.currentWinner !== null && parseInt(this.props.G.currentWinner, 10)  === parseInt(this.props.playerID, 10)) {
+        yourTurn = <div id="turn"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
+      }
+    } else {
+      if (this.props.G.currentWinner !== null && parseInt(this.props.G.currentWinner, 10)  === parseInt(this.props.playerID, 10)) {
+        yourTurn = <div id="turn"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
+      }
+    }    
 
     let hand = [];
     if (this.props.G.players[this.props.playerID]) {
@@ -142,40 +119,52 @@ export default class Board extends React.Component {
 
     return (
       <main className={isYourTurn ? 'your-turn' : ''}>
-        <div className="container">
-          {winner}
-          <div className="nes-container with-title">
-            <p className={`title ${isYourTurn ? 'nes-text is-error' : ''}`}>{yourTurn}</p>
-            {this.props.matchData.map((player, index) => player.hasOwnProperty('name') && this.props.G.players[index] ? <button key={index} onClick={() => this.punish(index)} className={this.props.G.players[index].calledUna ? 'called-una nes-badge is-splited' : 'nes-badge is-splited'}><span className={player.isConnected ? (parseInt(this.props.ctx.currentPlayer, 10) === index ? 'is-error' : 'is-primary'): 'is-dark'}>{player.name}{this.props.G.players[index].wins ? `(${this.props.G.players[index].wins})` : ''}</span><span className="is-dark">{this.props.G.players[index].hand.length}</span></button> : '')}
-          </div>
-          <div className="text-center">
-            <button className="nes-btn card deck mb mt" onClick={() => this.drawCard()}><span>DRAW<br/>CARD</span></button>
-            <div className={`discard card nes-btn mb mt ${getCardClass(this.props.G.currentCard.color)}`}><span>{this.props.G.currentCard.number}</span></div>
-          </div>
-          <hr/>
-          <div className="hand-wrap">
-              {hand.map((card, index) => card.color === 'wild' ?
-              <Popover
-                key={index}
-                isOpen={this.state.isPopoverOpenIndex === card.originalIndex}
-                onClickOutside={() => this.setIsPopoverOpen(null)}
-                content={
-                  <div className="nes-balloon from-left wild-balloon">
-                    <p>
-                      <button className="nes-btn is-primary" aria-label="play blue wild" onClick={() => this.playCard(card.originalIndex, card, 'blue')}></button>
-                      <button className="nes-btn is-success" aria-label="play green wild" onClick={() => this.playCard(card.originalIndex, card, 'green')}></button>
-                      <button className="nes-btn is-error" aria-label="play red wild" onClick={() => this.playCard(card.originalIndex, card, 'red')}></button>
-                      <button className="nes-btn is-warning" aria-label="play yellow wild" onClick={() => this.playCard(card.originalIndex, card, 'yellow')}></button>
-                    </p>
-                  </div>
-                }
-              >
-                <button onClick={() => this.setIsPopoverOpen(this.state.isPopoverOpenIndex === card.originalIndex ? null : card.originalIndex)} className="card nes-btn mb wild"><span>{card.number}</span></button>
-              </Popover>
-              : <button key={index} className={`card nes-btn mb ${getCardClass(card.color)}`} onClick={() => this.playCard(card.originalIndex, card)}><span>{card.number}</span></button>)}
-          </div> 
+        {yourTurn}
+        <div id="players" className="center"><ul>
+          {this.props.matchData.map((player, index) => (player.hasOwnProperty('name') && this.props.G.players[index] ? 
+            <li key={index} className={`player-btn-wrap ${this.props.G.players[index].calledUna ? 'said-una' : ''} ${!player.isConnected ? 'away' : ''} ${parseInt(this.props.G.currentWinner, 10) === index ? 'winner' : ''}`}>
+              <button onClick={() => this.punish(index)} className={`player-btn chip ${parseInt(this.props.ctx.currentPlayer, 10) === index ? 'cyan white-text z-depth-2' : ''}`}>
+                <span>{player.name}</span>
+                {parseInt(this.props.ctx.currentPlayer, 10) === index ? this.props.G.reverse ? <i className="material-icons reverse">arrow_back</i> : <i className="material-icons forward">arrow_forward</i> : ''}
+                {this.props.G.players[index].hand.length ? <div className="red lighten-1 white-text card-count">{this.props.G.players[index].hand.length}</div> : ''}
+              </button>
+              {this.props.G.players[index].wins > 0 ? <span className="win-count">{this.props.G.players[index].wins} ⭐</span> : ''}
+            </li>
+          : ''))}
+        </ul></div>
+        <canvas id="confetti"></canvas>
+        <div id="piles">
+            <button id="draw" onClick={() => this.drawCard()} className="card"><span>DRAW<br/>CARD</span></button>
+            <div id="discardpile" data-number={this.props.G.currentCard.number} data-color={this.props.G.currentCard.color} className="card"><span>{this.props.G.currentCard.number}</span></div>
         </div>
-        {this.props.G.players[this.props.playerID] ? <button id="call-una" className="nes-btn is-success" onClick={() => this.callUna()}>U</button> : ''}
+
+        <div id="overflowbox">
+            <div id="mycards">
+              {hand.map((card, index) => card.color === 'wild' ?
+                <Popover
+                  key={index}
+                  isOpen={this.state.isPopoverOpenIndex === card.originalIndex}
+                  onClickOutside={() => this.setIsPopoverOpen(null)}
+                  content={
+                    <div id="color-picker">
+                      <button className="btn blue" aria-label="play blue wild" onClick={() => this.playCard(card.originalIndex, card, 'blue')}></button>
+                      <button className="btn green" aria-label="play green wild" onClick={() => this.playCard(card.originalIndex, card, 'green')}></button>
+                      <button className="btn red" aria-label="play red wild" onClick={() => this.playCard(card.originalIndex, card, 'red')}></button>
+                      <button className="btn yellow" aria-label="play yellow wild" onClick={() => this.playCard(card.originalIndex, card, 'yellow')}></button>
+                    </div>
+                  }
+                >
+                  <button data-number={card.number} data-color={card.color} onClick={() => this.setIsPopoverOpen(this.state.isPopoverOpenIndex === card.originalIndex ? null : card.originalIndex)} className="card"><span>{card.number}</span></button>
+                </Popover>
+                : <button key={index} data-number={card.number} data-color={card.color} className="card" onClick={() => this.playCard(card.originalIndex, card)}><span>{card.number}</span></button>)
+              }
+            </div>
+        </div>
+
+        <div className="fixed-action-btn">
+          {this.props.G.players[this.props.playerID] ? <button id="call-una" className="btn-floating btn-large cyan" title="call una!" onClick={() => this.callUna()}><span>U</span></button> : ''}
+        </div>
+
         <div id="time">{ isYourTurn ? this.state.timeRemaining : ''}</div>
         <ReactInterval timeout={1000} enabled={true} callback={() => this.checkTime(isYourTurn)} />
       </main>

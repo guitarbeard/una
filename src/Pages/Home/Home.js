@@ -12,10 +12,11 @@ const Home = (props) => {
   const numPlayers = 20;
 
   const [room, setRoom] = useState("");
+  const joinIDCount = joinID ? joinID.length : room.length;
   const [jName, setJName] = useState("");
-  const jNameCount = maxNameLength - jName.length;
+  const jNameCount = jName.length;
   const [cName, setCName] = useState("");
-  const cNameCount = maxNameLength - cName.length;
+  const cNameCount = cName.length;
   const [errMsg, setErrMsg] = useState("");
 
   // handle URL to a room that doesn't exist
@@ -103,75 +104,84 @@ const Home = (props) => {
 
   return (
     <Lobby>
-      <section>
-        <form onSubmit={handleJoinRoom}>
-          <h2>Join Game</h2>
-          <div className="nes-field">
-            <label htmlFor="roomIdentification">Room ID</label>
-            <input
-              id="roomIdentification"
-              type="text"
-              maxLength={`${roomIDLength}`}
-              spellCheck="false"
-              autoComplete="off"
-              onKeyDown={(e) => handleKeyDown(e)}
-              onChange={(e) => setRoom(e.target.value)}
-              value={joinID ? joinID : room}
-              className="nes-input"
-            />
-          </div>
-          <div className="nes-field">
-            <label htmlFor="join-name">Username {jNameCount}</label>
-            <input
-              id="join-name"
-              type="text"
-              maxLength={`${maxNameLength}`}
-              spellCheck="false"
-              autoComplete="off"
-              onKeyDown={(e) => handleKeyDown(e, jName)}
-              onChange={(e) => setJName(e.target.value)}
-              onPaste={(e) => e.preventDefault()}
-              ref={jNameInputRef}
-              className="nes-input"
-            />
-          </div>
-          <button
-            type="submit"
-            className={`nes-btn ${((room.length !== roomIDLength && !joinID) || jName.length === 0) ? 'is-disabled' : 'is-primary'}`}
-            disabled={(room.length !== roomIDLength && !joinID) || jName.length === 0}
-          >
-            Join
-          </button>
-          <div className="nes-text is-error mt">{errMsg}</div>
+      <div className="row">
+        <form className="col s12"onSubmit={handleJoinRoom}>
+            <h2 className="cyan-text">Join</h2>
+            <div className="row">
+                <div className="input-field col s12">                    
+                    <input
+                      id="roomIdentification"
+                      type="text"
+                      maxLength={`${roomIDLength}`}
+                      spellCheck="false"
+                      autoComplete="off"
+                      onKeyDown={(e) => handleKeyDown(e)}
+                      onChange={(e) => setRoom(e.target.value)}
+                      value={joinID ? joinID : room}
+                      placeholder="****"
+                    />
+                    <label className="active" htmlFor="roomIdentification">Room ID</label>
+                    <span className="character-counter">{joinIDCount}/4</span>
+                </div>
+            </div>
+            <div className="row">
+                <div className="input-field col s12">
+                    <input
+                      id="join-name"
+                      type="text"
+                      maxLength={`${maxNameLength}`}
+                      spellCheck="false"
+                      autoComplete="off"
+                      onKeyDown={(e) => handleKeyDown(e, jName)}
+                      onChange={(e) => setJName(e.target.value)}
+                      onPaste={(e) => e.preventDefault()}
+                      ref={jNameInputRef}
+                      placeholder="Your Name"
+                    />
+                    <label className="active" htmlFor="join-name">Username</label>
+                    <span className="character-counter">{jNameCount}/12</span>
+                </div>
+            </div>
+            <button
+              type="submit"
+              className={((room.length !== roomIDLength && !joinID) || jName.length === 0) ? 'btn disabled' : 'btn waves-effect waves-light cyan'}
+              disabled={(room.length !== roomIDLength && !joinID) || jName.length === 0}
+            >
+              Join
+            </button>
+            <p className="red-text">{errMsg}</p>
         </form>
-      </section>
-      <section>
-        <form onSubmit={createRoom}>
-          <h2>Create Game</h2>
-          <div className="nes-field">
-            <label htmlFor="create-name">Username {cNameCount}</label>
-            <input
-              id="create-name"
-              type="text"
-              maxLength={`${maxNameLength}`}
-              spellCheck="false"
-              autoComplete="off"
-              onKeyDown={(e) => handleKeyDown(e, cName)}
-              onChange={(e) => setCName(e.target.value)}
-              onPaste={(e) => e.preventDefault()}
-              className="nes-input"
-            />
-          </div>
-          <p><small className="mb">Max Players: 20</small></p>
-          <button
-            type="submit"
-            className={`nes-btn ${cName.length === 0 ? 'is-disabled' : 'is-primary'}`}
-            disabled={cName.length === 0}
-          >
-            Create
-          </button>
+    </div>
+    <div className="row">
+        <form className="col s12" onSubmit={createRoom}>
+            <h2 className="cyan-text">Create</h2>
+            <p><small>Max Players: 20</small></p>
+            <div className="row">
+                <div className="input-field col s12">
+                  <input
+                    id="create-name"
+                    type="text"
+                    maxLength={`${maxNameLength}`}
+                    spellCheck="false"
+                    autoComplete="off"
+                    onKeyDown={(e) => handleKeyDown(e, cName)}
+                    onChange={(e) => setCName(e.target.value)}
+                    onPaste={(e) => e.preventDefault()}
+                    placeholder="Your Name"
+                  />
+                  <label className="active" htmlFor="create-name">Username</label>
+                  <span className="character-counter">{cNameCount}/12</span>
+                </div>
+            </div>
+            <button
+              type="submit"
+              className={cName.length === 0 ? 'btn disabled' : 'btn waves-effect waves-light cyan'}
+              disabled={cName.length === 0}
+            >
+              Create
+            </button>
         </form>
-      </section>
+      </div>
     </Lobby>
   );
 };

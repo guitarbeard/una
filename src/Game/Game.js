@@ -1,5 +1,4 @@
 import { INVALID_MOVE, ActivePlayers } from 'boardgame.io/core';
-import { func } from 'prop-types';
 import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];

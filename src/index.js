@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import { BrowserRouter as Router, Route, Switch, Redirect, useHistory } from "react-router-dom";
 import { Home, Room } from "./Pages";
 
-import "nes.css/css/nes.min.css";
 import "./App.css";
 
 const App = () => {
@@ -28,7 +27,18 @@ const App = () => {
 
 ReactDOM.render(
   <React.StrictMode>
-    <header><div className="container"><a href="/"><h1>UNA</h1></a></div></header>
+    <header>
+      <nav>
+        <div className="nav-wrapper cyan">
+            <div className="row">
+                <div className="col s12">
+                    <a href="/" className="brand-logo center">UNA</a>
+                </div>
+            </div>
+        </div>
+      </nav>
+    </header>
+    <h1 className="sr-only">UNA</h1>
     <Router>
       <App />
     </Router>
