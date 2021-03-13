@@ -22,15 +22,17 @@ const Room = (props) => {
   const { id } = useParams();
   const [copied, setCopied] = useState(false);
   const [players, setPlayers] = useState([]);
+  const [winsToEndGame, setWinsToEndGame] = useState('');
   const [show, setShow] = useState(false);
 
   // check for newly joined players by comparing against the two players array (front-end and the api, and api is always slightly ahead)
   useEffect(() => {
     const interval = setInterval(() => {
-      api.getPlayers(id).then(
-        (players) => {
-          setPlayers(players);
-          if (players[0].hasOwnProperty('data') && players[0].data.gameStarted) {
+      api.getRoom(id).then(
+        (room) => {
+          setPlayers(room.players);
+          setWinsToEndGame(room.setupData.winsToEndGame);
+          if (room.players[0].hasOwnProperty('data') && room.players[0].data.gameStarted) {
             setShow(true);
           }
         },
@@ -97,7 +99,8 @@ const Room = (props) => {
           <div className="row">
             <div className="col s12">
               <h2 className="cyan-text">Waiting Room</h2>
-              <p className="mb">Max Players: 20</p>
+              <p className="mb">Max Players: {players.length}</p>
+              <p className="mb">Wins to End Game: {winsToEndGame}</p>
             </div>
             <div className="input-field col s12">
               <input

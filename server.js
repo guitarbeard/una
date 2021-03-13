@@ -1,5 +1,5 @@
 // from boardgame.io guide for Deployment to Heroku of Frontend and Backend
-import { Server, FlatFile } from "boardgame.io/server";
+import { Server } from "boardgame.io/server";
 import { Una } from "./src/Game/Game";
 import path from "path";
 import serve from "koa-static";
@@ -10,7 +10,6 @@ const customAlphabet = require("nanoid-good").customAlphabet(en);
 
 const server = Server({
   games: [Una],
-  db: new FlatFile({ dir: "db", logging: false, ttl: 1000 * 60 * 60 }),
   uuid: customAlphabet("ABCDEFGHJKMNOPQRSTUVWXYZ0123456789", 4)
 });
 

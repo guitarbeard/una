@@ -14,9 +14,9 @@ export class LobbyAPI {
   }
 
   // POST /games/{game_name}/create : create a match
-  async createRoom(numPlayers) {
+  async createRoom(numPlayers, winsToEndGame) {
     try {
-      const res = await this.api.post("create", { json: { numPlayers: numPlayers } }).json();
+      const res = await this.api.post("create", { json: { numPlayers, setupData: {winsToEndGame} } }).json();
       return res.matchID;
     } catch (err) {
       console.log("failed to create room:", err);
@@ -56,6 +56,12 @@ export class LobbyAPI {
   async getPlayers(roomID) {
     const res = await this.api.get(roomID).json();
     return res.players;
+  }
+
+  // GET /games/{game_name}/{room_id} : get specific match by its matchID
+  async getRoom(roomID) {
+    const res = await this.api.get(roomID).json();
+    return res;
   }
 
   /*----------------- TODO: actually use this request... e.g. show available rooms in the lobby ? -----------------*/

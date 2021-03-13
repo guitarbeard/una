@@ -35,25 +35,36 @@ function drawCards(G, ctx, cardAmount) {
   return cards;
 }
 
+function getPlayer(G, playerID) {
+  return G.players.find(player => parseInt(player.id, 10) === parseInt(playerID, 10));
+}
+
+function playerHasWon(G) {
+  return G.players.find(player => (G.winsToEndGame === '∞' ? false : player.wins === parseInt(G.winsToEndGame, 10)));
+}
+
 function addCardsToPlayer(G, ctx, playerID, drawLength) {
-  G.players[playerID].hand = G.players[playerID].hand.concat(drawCards(G, ctx, drawLength));
-  G.players[playerID].calledUna = false;
+  getPlayer(G, playerID).hand = getPlayer(G, playerID).hand.concat(drawCards(G, ctx, drawLength));
+  getPlayer(G, playerID).calledUna = false;
 }
 
 function createPlayer(G, ctx, playerID) {
-  G.players[playerID] = {
-    hand: drawCards(G, ctx, 7),
-    calledUna: false,
-    wins: 0
+  if (typeof(getPlayer(G, playerID)) === 'undefined') {
+    G.players.push({
+      id: playerID,
+      hand: drawCards(G, ctx, 7),
+      calledUna: false,
+      wins: 0
+    });
   }
 }
 
 function canPlayCard(G, playerID, cardIndex) {
-  return G.players[playerID].hand[cardIndex].color === 'wild' || G.players[playerID].hand[cardIndex].number === G.currentCard.number || G.players[playerID].hand[cardIndex].color === G.currentCard.color;
+  return getPlayer(G, playerID).hand[cardIndex].color === 'wild' || getPlayer(G, playerID).hand[cardIndex].number === G.currentCard.number || getPlayer(G, playerID).hand[cardIndex].color === G.currentCard.color;
 }
 
 function canCallUna(G, ctx, playerID) {
-  return (G.players[playerID].hand.length === 2 && playerID === ctx.currentPlayer) || G.players[playerID].hand.length < 2;
+  return (getPlayer(G, playerID).hand.length === 2 && playerID === ctx.currentPlayer) || getPlayer(G, playerID).hand.length < 2;
 }
 
 function isSkipCard(G, playedCard) {
@@ -72,7 +83,7 @@ function getNextPlayerIndex(playOrderPos, G) {
   return nextPlayerIndex;
 }
 
-function createSetup(ctx) {
+function createSetup(ctx, setupData) {
   let deck = ctx.random.Shuffle(createDeck());
   let currentCard = deck.pop();
   currentCard.color = currentCard.color === 'wild' ? getRandomColor(ctx) : currentCard.color;
@@ -83,7 +94,8 @@ function createSetup(ctx) {
     players: [],
     currentCard,
     reverse: false,
-    skipped: true
+    skipped: true,
+    winsToEndGame: setupData.winsToEndGame
   };
 }
 
@@ -95,12 +107,16 @@ export const Una = {
   moves: {
     playerJoin: {
       move: (G, ctx, playerID) => {
-        if (!G.players[playerID]) {
+        if (typeof(getPlayer(G, playerID)) === 'undefined') {
           createPlayer(G, ctx, playerID);
+        } else {
+          return INVALID_MOVE;
         }
       },
       client: false,
-      noLimit: true
+      noLimit: true,
+      // Allow simultaneous moves (everyone is trying to join at once): https://github.com/boardgameio/boardgame.io/issues/828
+      ignoreStaleStateID: true
     },
 
     pass: {
@@ -114,7 +130,7 @@ export const Una = {
     callUna: {
       move: (G, ctx, playerID) => {
         if (canCallUna(G, ctx, playerID)) {
-          G.players[playerID].calledUna = true;
+          getPlayer(G, playerID).calledUna = true;
         } else {
           return INVALID_MOVE;
         }
@@ -125,7 +141,7 @@ export const Una = {
 
     drawCard: {
       move: (G, ctx, playerID) => {
-        let drawLength = G.players[playerID].hand.length ? 1 : 7;
+        let drawLength = getPlayer(G, playerID).hand.length ? 1 : 7;
         if (ctx.currentPlayer === playerID) {
           addCardsToPlayer(G, ctx, playerID, drawLength);
         } else {
@@ -137,8 +153,10 @@ export const Una = {
 
     punish: {
       move: (G, ctx, playerID) => {
-        if (G.players.length && G.players[playerID].hand.length === 1) {
+        if (G.players.length && getPlayer(G, playerID).hand.length === 1) {
           addCardsToPlayer(G, ctx, playerID, 4);
+        } else {
+          return INVALID_MOVE;
         }
       },
       client: false,
@@ -148,7 +166,7 @@ export const Una = {
     playCard: {
       move: (G, ctx, playerID, cardIndex, color) => {
         if (canPlayCard(G, playerID, cardIndex)) {
-          let playedCard = G.players[playerID].hand.splice(cardIndex, 1)[0];
+          let playedCard = getPlayer(G, playerID).hand.splice(cardIndex, 1)[0];
           if (playedCard.color === 'wild') {
             playedCard.color = color ? color : getRandomColor(ctx);
           }
@@ -206,5 +224,11 @@ export const Una = {
         return G.skipped ? getNextPlayerIndex(nextPlayerIndex, G) : nextPlayerIndex;        
       }
     },
+  },
+
+  endIf: (G, ctx) => {
+    if (playerHasWon(G)) {
+      return { winner: playerHasWon(G) };
+    }
   }
 };

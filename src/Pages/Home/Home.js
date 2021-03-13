@@ -9,7 +9,6 @@ const Home = (props) => {
   const jNameInputRef = useRef();
   const maxNameLength = 12;
   const roomIDLength = 4;
-  const numPlayers = 20;
 
   const [room, setRoom] = useState("");
   const joinIDCount = joinID ? joinID.length : room.length;
@@ -17,6 +16,8 @@ const Home = (props) => {
   const jNameCount = jName.length;
   const [cName, setCName] = useState("");
   const cNameCount = cName.length;
+  const [maxPlayers, setMaxPlayers] = useState(1);
+  const [winsToEndGame, setWinsToEndGame] = useState("1");
   const [errMsg, setErrMsg] = useState("");
 
   // handle URL to a room that doesn't exist
@@ -92,7 +93,7 @@ const Home = (props) => {
 
   const createRoom = (e) => {
     e.preventDefault();
-    api.createRoom(numPlayers).then((roomID) => {
+    api.createRoom(maxPlayers, winsToEndGame).then((roomID) => {
       joinRoom(roomID, cName);
     });
   };
@@ -155,7 +156,27 @@ const Home = (props) => {
     <div className="row">
         <form className="col s12" onSubmit={createRoom}>
             <h2 className="cyan-text">Create</h2>
-            <p><small>Max Players: 20</small></p>
+            <div className="row">
+             <div className="input-field col s12">
+              <p className="range-field">
+                <label className="active" htmlFor="max-players">Max Players: {maxPlayers}</label>
+                <input type="range" id="max-players" min="1" max="20" value={maxPlayers} onChange={(e) => setMaxPlayers(e.target.value)} />
+              </p>
+             </div>
+            </div>
+            <div className="row">
+              <div className="col s12">
+                <label htmlFor="wins">Wins to End Game</label>
+                <select id="wins" className="browser-default" value={winsToEndGame} onChange={(e) => setWinsToEndGame(e.target.value)}>
+                  <option value="1">1</option>
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="∞">∞</option>
+                </select>
+              </div>
+            </div>
             <div className="row">
                 <div className="input-field col s12">
                   <input

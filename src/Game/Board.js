@@ -7,9 +7,45 @@ function sortByNumber(a, b) {
   return compare;
 }
 
+function sortByID(a, b) {
+  const compare = parseInt(a.id, 10) - parseInt(b.id, 10);
+  return compare;
+}
+
 function sortByColor(a, b) {
   const compare = a.colorIndex - b.colorIndex;
   return compare;
+}
+
+function getPlayer(G, playerID) {
+  return G.players.find(player => parseInt(player.id, 10) === parseInt(playerID, 10));
+}
+
+function currentlyWinning(props) {
+  return props.G.currentWinner !== null && parseInt(props.G.currentWinner, 10) === parseInt(props.playerID, 10);
+}
+
+function playConfetti() {
+  var duration = 15 * 1000;
+  var animationEnd = Date.now() + duration;
+  var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+  function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  var interval = setInterval(function() {
+    var timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    var particleCount = 150 * (timeLeft / duration);
+    // since particles fall down, start a bit higher than random
+    window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+    window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+  }, 250);
 }
 
 export default class Board extends React.Component {
@@ -22,7 +58,7 @@ export default class Board extends React.Component {
   }
 
   drawCard() {
-    if (this.props.G.players[this.props.playerID]) {
+    if (getPlayer(this.props.G, this.props.playerID)) {
       if (this.props.ctx.currentPlayer === this.props.playerID) {
         this.props.moves.drawCard(this.props.playerID);
         this.setState({isPopoverOpenIndex: null, timeRemaining: 7});
@@ -31,7 +67,7 @@ export default class Board extends React.Component {
   }
 
   playCard(index, card, color = false) {
-    if (this.props.G.players[this.props.playerID]) {
+    if (getPlayer(this.props.G, this.props.playerID)) {
       if (this.props.ctx.currentPlayer === this.props.playerID || (card.color === this.props.G.currentCard.color && card.type === this.props.G.currentCard.type && card.number === this.props.G.currentCard.number)) {
         this.props.moves.playCard(this.props.playerID, index, color);
         this.setState({isPopoverOpenIndex: null});
@@ -47,13 +83,13 @@ export default class Board extends React.Component {
   }
 
   callUna() {
-    if (this.props.G.players[this.props.playerID]) {
+    if (getPlayer(this.props.G, this.props.playerID)) {
       this.props.moves.callUna(this.props.playerID);
     }
   }
 
   punish(playerID) {
-    if (this.props.G.players[this.props.playerID]) {
+    if (getPlayer(this.props.G, this.props.playerID)) {
       if (!this.props.G.players[playerID].calledUna && this.props.G.players[playerID].hand.length === 1) {
         this.props.moves.punish(playerID);
       }
@@ -61,7 +97,7 @@ export default class Board extends React.Component {
   }
 
   setIsPopoverOpen(isPopoverOpenIndex) {
-    if (this.props.G.players[this.props.playerID]) {
+    if (getPlayer(this.props.G, this.props.playerID)) {
       this.setState({isPopoverOpenIndex});
     }
   }
@@ -82,8 +118,14 @@ export default class Board extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.playerID && this.props.matchData[this.props.playerID].hasOwnProperty('name') && !this.props.G.players[this.props.playerID]) {
-      this.playerJoin();
+    this.playerJoin();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (currentlyWinning(this.props)) {
+      if (currentlyWinning(this.props) !== currentlyWinning(prevProps)) {
+        playConfetti();
+      }
     }
   }
 
@@ -93,18 +135,19 @@ export default class Board extends React.Component {
     let yourTurn = '';
     if (isYourTurn) {
       yourTurn = <div id="turn"><marquee>⭐ Your Turn ⭐</marquee></div>;
-      if (this.props.G.currentWinner !== null && parseInt(this.props.G.currentWinner, 10)  === parseInt(this.props.playerID, 10)) {
-        yourTurn = <div id="turn"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
-      }
-    } else {
-      if (this.props.G.currentWinner !== null && parseInt(this.props.G.currentWinner, 10)  === parseInt(this.props.playerID, 10)) {
-        yourTurn = <div id="turn"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
-      }
-    }    
+    }  
+
+    if (currentlyWinning(this.props)) {
+      yourTurn = <div id="turn"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
+    }
+
+    if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
+      yourTurn = <div id="turn"><marquee>⭐ {this.props.ctx.gameover.winner.id === this.props.playerID ? 'YOU WIN!!!' : `${this.props.matchData[parseInt(this.props.ctx.gameover.winner.id, 10)].name} WINS!!!`} ⭐</marquee></div>;
+    }
 
     let hand = [];
-    if (this.props.G.players[this.props.playerID]) {
-      hand = this.props.G.players[this.props.playerID].hand.map((card, index) => {
+    if (getPlayer(this.props.G, this.props.playerID)) {
+      hand = getPlayer(this.props.G, this.props.playerID).hand.map((card, index) => {
         return {
           originalIndex: index,
           numberIndex: card.numberIndex,
@@ -121,16 +164,16 @@ export default class Board extends React.Component {
       <main className={isYourTurn ? 'your-turn' : ''}>
         {yourTurn}
         <div id="players" className="center"><ul>
-          {this.props.matchData.map((player, index) => (player.hasOwnProperty('name') && this.props.G.players[index] ? 
-            <li key={index} className={`player-btn-wrap ${this.props.G.players[index].calledUna ? 'said-una' : ''} ${!player.isConnected ? 'away' : ''} ${parseInt(this.props.G.currentWinner, 10) === index ? 'winner' : ''}`}>
-              <button onClick={() => this.punish(index)} className={`player-btn chip ${parseInt(this.props.ctx.currentPlayer, 10) === index ? 'cyan white-text z-depth-2' : ''}`}>
-                <span>{player.name}</span>
-                {parseInt(this.props.ctx.currentPlayer, 10) === index ? this.props.G.reverse ? <i className="material-icons reverse">arrow_back</i> : <i className="material-icons forward">arrow_forward</i> : ''}
-                {this.props.G.players[index].hand.length ? <div className="red lighten-1 white-text card-count">{this.props.G.players[index].hand.length}</div> : ''}
+          {this.props.G.players.sort(sortByID).map((player, index) =>
+            <li key={index} className={`player-btn-wrap ${player.calledUna ? 'said-una' : ''} ${!this.props.matchData[parseInt(player.id, 10)].isConnected ? 'away' : ''} ${parseInt(this.props.G.currentWinner, 10) === parseInt(player.id, 10) ? 'winner' : ''}`}>
+              <button onClick={() => this.punish(parseInt(player.id, 10))} className={`player-btn chip ${parseInt(this.props.ctx.currentPlayer, 10) === parseInt(player.id, 10) ? 'cyan white-text z-depth-2' : ''}`}>
+                <span>{this.props.matchData[parseInt(player.id, 10)].name}</span>
+                {parseInt(this.props.ctx.currentPlayer, 10) === parseInt(player.id, 10) ? this.props.G.reverse ? <i className="material-icons reverse">arrow_back</i> : <i className="material-icons forward">arrow_forward</i> : ''}
+                {player.hand.length ? <div className="red lighten-1 white-text card-count">{player.hand.length}</div> : ''}
               </button>
-              {this.props.G.players[index].wins > 0 ? <span className="win-count">{this.props.G.players[index].wins} ⭐</span> : ''}
+              {player.wins > 0 ? <span className="win-count">{player.wins} ⭐</span> : ''}
             </li>
-          : ''))}
+          )}
         </ul></div>
         <canvas id="confetti"></canvas>
         <div id="piles">
@@ -162,11 +205,11 @@ export default class Board extends React.Component {
         </div>
 
         <div className="fixed-action-btn">
-          {this.props.G.players[this.props.playerID] ? <button id="call-una" className="btn-floating btn-large cyan" title="call una!" onClick={() => this.callUna()}><span>U</span></button> : ''}
+          {getPlayer(this.props.G, this.props.playerID) ? <button id="call-una" className="btn-floating btn-large cyan" title="call una!" onClick={() => this.callUna()}><span>U</span></button> : ''}
         </div>
 
         <div id="time">{ isYourTurn ? this.state.timeRemaining : ''}</div>
-        <ReactInterval timeout={1000} enabled={true} callback={() => this.checkTime(isYourTurn)} />
+        <ReactInterval timeout={1000} enabled={!this.props.ctx.gameover} callback={() => this.checkTime(isYourTurn)} />
       </main>
     );
   }
