@@ -25,8 +25,8 @@ function currentlyWinning(props) {
   return props.G.currentWinner !== null && parseInt(props.G.currentWinner, 10) === parseInt(props.playerID, 10);
 }
 
-function playConfetti() {
-  var duration = 15 * 1000;
+function playConfetti(seconds = 7, particles = 150) {
+  var duration = seconds * 1000;
   var animationEnd = Date.now() + duration;
   var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
@@ -41,7 +41,7 @@ function playConfetti() {
       return clearInterval(interval);
     }
 
-    var particleCount = 150 * (timeLeft / duration);
+    var particleCount = particles * (timeLeft / duration);
     // since particles fall down, start a bit higher than random
     window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
     window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
@@ -124,7 +124,13 @@ export default class Board extends React.Component {
   componentDidUpdate(prevProps) {
     if (currentlyWinning(this.props)) {
       if (currentlyWinning(this.props) !== currentlyWinning(prevProps)) {
-        playConfetti();
+        if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
+          if (this.props.ctx.gameover.winner.id === this.props.playerID) {
+            playConfetti(14);
+          }
+        } else {
+          playConfetti();
+        }
       }
     }
   }
@@ -132,17 +138,14 @@ export default class Board extends React.Component {
   render() {
     const isYourTurn = parseInt(this.props.ctx.currentPlayer, 10) === parseInt(this.props.playerID, 10);
 
-    let yourTurn = '';
-    if (isYourTurn) {
-      yourTurn = <div id="turn"><marquee>⭐ Your Turn ⭐</marquee></div>;
-    }  
-
+    let win = '';
     if (currentlyWinning(this.props)) {
-      yourTurn = <div id="turn"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
+      win = <div id="win"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
     }
 
     if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
-      yourTurn = <div id="turn"><marquee>⭐ {this.props.ctx.gameover.winner.id === this.props.playerID ? 'YOU WIN!!!' : `${this.props.matchData[parseInt(this.props.ctx.gameover.winner.id, 10)].name} WINS!!!`} ⭐</marquee></div>;
+      var youWonGame = this.props.ctx.gameover.winner.id === this.props.playerID;
+      win = <div id="win"><marquee>⭐ {youWonGame ? 'YOU WIN!!!' : `${this.props.matchData[parseInt(this.props.ctx.gameover.winner.id, 10)].name} WINS!!!`} ⭐</marquee></div>;
     }
 
     let hand = [];
@@ -162,7 +165,7 @@ export default class Board extends React.Component {
 
     return (
       <main className={isYourTurn ? 'your-turn' : ''}>
-        {yourTurn}
+        {win}
         <div id="players" className="center"><ul>
           {this.props.G.players.sort(sortByID).map((player, index) =>
             <li key={index} className={`player-btn-wrap ${player.calledUna ? 'said-una' : ''} ${!this.props.matchData[parseInt(player.id, 10)].isConnected ? 'away' : ''} ${parseInt(this.props.G.currentWinner, 10) === parseInt(player.id, 10) ? 'winner' : ''}`}>
@@ -208,7 +211,7 @@ export default class Board extends React.Component {
           {getPlayer(this.props.G, this.props.playerID) ? <button id="call-una" className="btn-floating btn-large cyan" title="call una!" onClick={() => this.callUna()}><span>U</span></button> : ''}
         </div>
 
-        <div id="time">{ isYourTurn ? this.state.timeRemaining : ''}</div>
+        <div id="time">{ isYourTurn && !this.props.ctx.gameover ? this.state.timeRemaining : ''}</div>
         <ReactInterval timeout={1000} enabled={!this.props.ctx.gameover} callback={() => this.checkTime(isYourTurn)} />
       </main>
     );

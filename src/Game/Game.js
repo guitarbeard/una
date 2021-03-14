@@ -3,32 +3,34 @@ import { GAME_NAME } from "../config";
 
 const COLORS = ["blue", "green", "red", "yellow"];
 
-function createDeck() {
+function createDeck(deckSize) {
   let cards = [];
-  for(let color of COLORS){
-    // 1x 0 and 2x 1-9
-    for(let i=0;i<=9;i+=.5){
-      cards.push({numberIndex: i, colorIndex: COLORS.indexOf(color), type:"regular", color, number:Math.ceil(i)});
+  for (let index = 0; index < deckSize; index++) {
+    for(let color of COLORS){
+      // 1x 0 and 2x 1-9
+      for(let i=0;i<=9;i+=.5){
+        cards.push({numberIndex: i, colorIndex: COLORS.indexOf(color), type:"regular", color, number:Math.ceil(i)});
+      }
+      
+      // 2x each action card
+      for(let i=0;i<2;i++){
+        cards.push({numberIndex: 10, colorIndex: COLORS.indexOf(color), type:"reverse", color, number:"R"});
+        cards.push({numberIndex: 11, colorIndex: COLORS.indexOf(color), type:"skip", color, number:">"});
+        cards.push({numberIndex: 12, colorIndex: COLORS.indexOf(color), type:"draw2", color, number:"+2"});
+      }
+  
+      // Wild cards once
+      cards.push({numberIndex: 13, colorIndex: 4, type:"wild", color:"wild", number:"?"});
+      // Wild+4 cards once
+      cards.push({numberIndex: 13, colorIndex: 4, type:"wilddraw4", color:"wild", number:"+4"});
     }
-    
-    // 2x each action card
-    for(let i=0;i<2;i++){
-      cards.push({numberIndex: 10, colorIndex: COLORS.indexOf(color), type:"reverse", color, number:"R"});
-      cards.push({numberIndex: 11, colorIndex: COLORS.indexOf(color), type:"skip", color, number:">"});
-      cards.push({numberIndex: 12, colorIndex: COLORS.indexOf(color), type:"draw2", color, number:"+2"});
-    }
-
-    // Wild cards once
-    cards.push({numberIndex: 13, colorIndex: 4, type:"wild", color:"wild", number:"?"});
-    // Wild+4 cards once
-    cards.push({numberIndex: 13, colorIndex: 4, type:"wilddraw4", color:"wild", number:"+4"});
   }
   return cards;
 }
 
 function drawCards(G, ctx, cardAmount) {
   if (G.deck.length < cardAmount) {
-    const deck = ctx.random.Shuffle(createDeck());
+    const deck = ctx.random.Shuffle(createDeck(3));
     G.deck = G.deck.concat(deck);
   }
   const cards = G.deck.splice(0, cardAmount);
@@ -84,7 +86,7 @@ function getNextPlayerIndex(playOrderPos, G) {
 }
 
 function createSetup(ctx, setupData) {
-  let deck = ctx.random.Shuffle(createDeck());
+  let deck = ctx.random.Shuffle(createDeck(3));
   let currentCard = deck.pop();
   currentCard.color = currentCard.color === 'wild' ? getRandomColor(ctx) : currentCard.color;
   return {

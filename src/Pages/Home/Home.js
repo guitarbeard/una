@@ -16,7 +16,7 @@ const Home = (props) => {
   const jNameCount = jName.length;
   const [cName, setCName] = useState("");
   const cNameCount = cName.length;
-  const [maxPlayers, setMaxPlayers] = useState(1);
+  const [maxPlayers, setMaxPlayers] = useState(4);
   const [winsToEndGame, setWinsToEndGame] = useState("1");
   const [errMsg, setErrMsg] = useState("");
 

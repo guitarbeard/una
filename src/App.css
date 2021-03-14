@@ -13,6 +13,24 @@ main {
     padding-top: 64px;
 }
 
+main::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    box-shadow: inset #00bcd4 0 0 30px 15px;
+    animation: huerot 5s linear infinite;
+    opacity: 0;
+    transition: opacity .3s ease-in-out;
+}
+
+main.your-turn::before {
+    opacity: 1;
+}
+
 @media (max-width: 600px) {
     main {
         padding-top: 56px;
@@ -261,7 +279,7 @@ select {
     z-index: -1;
 }
 
-#turn {
+#win {
     text-align: center;
     background-image: linear-gradient(120deg, rgba(0,255,0,1) 0%, rgba(255,0,0,1) 100%);
     color: white;
@@ -279,15 +297,15 @@ select {
     height: 90px;
 }
 
-#turn marquee {
+#win marquee {
     width: 100%;
 }
 
 @media (max-width: 787px) {
-    #turn {
+    #win {
         font-size: 9vw;
     }
-    #turn.active {
+    #win.active {
         height: 40px;
     }
 }
