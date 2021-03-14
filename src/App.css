@@ -350,8 +350,8 @@ select {
     padding: 0;
     line-height: 1.4;
     text-align: left;
-    width: 18vmin; /* 9:16 aspect ratio*/
-    height: 32vmin;
+    width: 13.5vmin; /* 9:16 aspect ratio*/
+    height: 24vmin;
     border: 5px solid black;
     border-radius: 10px;
     overflow: hidden;
@@ -364,7 +364,7 @@ select {
     
     user-select: none;
     cursor: pointer;
-    margin: 10px;
+    margin: 5px;
     /* Gradient default cards */
     background-image: radial-gradient(circle, rgba(255,0,0,0) 28%, rgba(0,0,0,1) 42%, rgba(255,255,255,1) 43%, rgba(0,0,0,1) 44%, rgba(255,0,0,0) 45%, rgba(255,0,0,0) 73%, rgba(0,0,0,1) 74%, rgba(255,0,0,0) 75%);;
 }
@@ -378,17 +378,17 @@ select {
 .card::before, .card::after{
     content: attr(data-number);
     position: absolute;
-    font-size: calc(18vmin / 6.6);/*4vmin;*/
+    font-size: calc(12vmin / 6.6);/*4vmin;*/
     line-height: 1;
 }
 .card::before{
     bottom:2px;
-    left:4px;
+    right:4px;
     transform: rotate(180deg);
 }
 .card::after{
     top:2px;
-    right:4px;
+    left:4px;
 }
 
 /* Number in the center*/
@@ -399,11 +399,11 @@ select {
     text-align: center;
     transform: translate(0, -50%);
     font-family: 'Monoton', cursive;
-    font-size: calc(18vmin / 2.6);
+    font-size: calc(14vmin / 2.6);
 }
 
 #draw.card > span {
-    font-size: calc(18vmin / 4.4);/*8vmin;*/ /* fits fine for three letters */
+    font-size: calc(12vmin / 4.4);/*8vmin;*/ /* fits fine for three letters */
 }
 
 
@@ -422,7 +422,6 @@ select {
 
 .card[data-color="wild"] {
     background-image: radial-gradient(circle, rgba(255,0,0,0) 28%, rgba(0,0,0,1) 42%, rgba(255,255,255,1) 43%, rgba(0,0,0,1) 44%, rgba(255,0,0,0) 45%, rgba(255,0,0,0) 73%, rgba(0,0,0,1) 74%, rgba(255,0,0,0) 75%), linear-gradient(120deg, rgba(0,255,0,1) 0%, rgba(255,0,0,1) 100%);
-
     animation: huerot 5s linear infinite;
 }
 .card[data-color="wild"]>span{
@@ -462,7 +461,7 @@ select {
 
 /* Draw pile */
 #draw{
-    background-size: calc(18vmin * 3) 32vmin;/* 56vmin 32vmin */
+    background-size: calc(18vmin * 3) 24vmin;/* 56vmin 32vmin */
     background-image: radial-gradient(rgba(236,255,0,1) 41%, rgba(255,255,255,1) 43%, rgba(0,0,0,1) 44%, rgba(255,192,0,1) 45%, rgba(255,0,0,1) 60%, rgba(0,0,0,1) 75%);
     cursor: pointer;
 }
