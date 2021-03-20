@@ -20,7 +20,7 @@ main::before {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 0;
+    z-index: -1;
     box-shadow: inset #00bcd4 0 0 30px 15px;
     animation: huerot 5s linear infinite;
     opacity: 0;

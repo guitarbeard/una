@@ -21,10 +21,6 @@ function getPlayer(G, playerID) {
   return G.players.find(player => parseInt(player.id, 10) === parseInt(playerID, 10));
 }
 
-function currentlyWinning(props) {
-  return props.G.currentWinner !== null && parseInt(props.G.currentWinner, 10) === parseInt(props.playerID, 10);
-}
-
 function playConfetti(seconds = 7, particles = 150) {
   var duration = seconds * 1000;
   var animationEnd = Date.now() + duration;
@@ -122,14 +118,16 @@ export default class Board extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (currentlyWinning(this.props)) {
-      if (currentlyWinning(this.props) !== currentlyWinning(prevProps)) {
-        if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
-          if (this.props.ctx.gameover.winner.id === this.props.playerID) {
-            playConfetti(14);
+    if (getPlayer(this.props.G, this.props.playerID)) {
+      if (!getPlayer(this.props.G, this.props.playerID).hand.length) {
+        if (getPlayer(this.props.G, this.props.playerID).hand.length !== getPlayer(prevProps.G, prevProps.playerID).hand.length) {
+          if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
+            if (this.props.ctx.gameover.winner.id === this.props.playerID) {
+              playConfetti(14);
+            }
+          } else {
+            playConfetti();
           }
-        } else {
-          playConfetti();
         }
       }
     }
@@ -137,15 +135,11 @@ export default class Board extends React.Component {
 
   render() {
     const isYourTurn = parseInt(this.props.ctx.currentPlayer, 10) === parseInt(this.props.playerID, 10);
-
     let win = '';
-    if (currentlyWinning(this.props)) {
-      win = <div id="win"><marquee>⭐ YOU WIN!!! ⭐</marquee></div>;
-    }
-
+    let youWonGame = false;
     if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
-      var youWonGame = this.props.ctx.gameover.winner.id === this.props.playerID;
-      win = <div id="win"><marquee>⭐ {youWonGame ? 'YOU WIN!!!' : `${this.props.matchData[parseInt(this.props.ctx.gameover.winner.id, 10)].name} WINS!!!`} ⭐</marquee></div>;
+      youWonGame = this.props.ctx.gameover.winner.id === this.props.playerID;
+      win = <div id="win"><marquee>⭐ {youWonGame ? 'YOU WIN!!! ⭐' : `${this.props.matchData[parseInt(this.props.ctx.gameover.winner.id, 10)].name} WINS!!! 💀 YOU LOSE 💀`}</marquee></div>;
     }
 
     let hand = [];
@@ -168,7 +162,7 @@ export default class Board extends React.Component {
         {win}
         <div id="players" className="center"><ul>
           {this.props.G.players.sort(sortByID).map((player, index) =>
-            <li key={index} className={`player-btn-wrap ${player.calledUna ? 'said-una' : ''} ${!this.props.matchData[parseInt(player.id, 10)].isConnected ? 'away' : ''} ${parseInt(this.props.G.currentWinner, 10) === parseInt(player.id, 10) ? 'winner' : ''}`}>
+            <li key={index} className={`player-btn-wrap ${player.calledUna ? 'said-una' : ''} ${!this.props.matchData[parseInt(player.id, 10)].isConnected ? 'away' : ''}`}>
               <button onClick={() => this.punish(parseInt(player.id, 10))} className={`player-btn chip ${parseInt(this.props.ctx.currentPlayer, 10) === parseInt(player.id, 10) ? 'cyan white-text z-depth-2' : ''}`}>
                 <span>{this.props.matchData[parseInt(player.id, 10)].name}</span>
                 {parseInt(this.props.ctx.currentPlayer, 10) === parseInt(player.id, 10) ? this.props.G.reverse ? <i className="material-icons reverse">arrow_back</i> : <i className="material-icons forward">arrow_forward</i> : ''}

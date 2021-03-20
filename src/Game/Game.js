@@ -41,7 +41,7 @@ function getPlayer(G, playerID) {
   return G.players.find(player => parseInt(player.id, 10) === parseInt(playerID, 10));
 }
 
-function playerHasWon(G) {
+function playerHasWonGame(G) {
   return G.players.find(player => (G.winsToEndGame === '∞' ? false : player.wins === parseInt(G.winsToEndGame, 10)));
 }
 
@@ -90,8 +90,6 @@ function createSetup(ctx, setupData) {
   let currentCard = deck.pop();
   currentCard.color = currentCard.color === 'wild' ? getRandomColor(ctx) : currentCard.color;
   return {
-    gameEnded: false,
-    currentWinner: null,
     deck,
     players: [],
     currentCard,
@@ -187,6 +185,9 @@ export const Una = {
             G.reverse = !G.reverse;
           }
           G.currentCard = playedCard;
+          if (!getPlayer(G, playerID).hand.length) {
+            getPlayer(G, playerID).wins++;
+          }
           if(ctx.currentPlayer !== playerID) {
             ctx.events.pass();
           }
@@ -204,15 +205,6 @@ export const Una = {
     onBegin: (G, ctx) => {
       G.skipped = false;
     },
-    onEnd: (G, ctx) => {
-      if (G.players.length && !G.players[ctx.playOrderPos].hand.length && G.currentWinner === null) {
-        G.currentWinner = ctx.playOrderPos;
-        G.players[ctx.playOrderPos].wins++;
-      }
-      if (G.players.length && G.currentWinner !== null && G.players[G.currentWinner].hand.length) {
-        G.currentWinner = null;
-      }
-    },
     order: {
       // Get the initial value of playOrderPos.
       // This is called at the beginning of the phase.
@@ -229,8 +221,9 @@ export const Una = {
   },
 
   endIf: (G, ctx) => {
-    if (playerHasWon(G)) {
-      return { winner: playerHasWon(G) };
+    var winner = playerHasWonGame(G);
+    if (winner) {
+      return { winner };
     }
   }
 };
