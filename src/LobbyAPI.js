@@ -34,6 +34,17 @@ export class LobbyAPI {
     }
   }
 
+  // POST /games/{game_name}/{room_id}/join : join a match
+  async playAgain(roomID, playerID, credentials, ) {
+    try {
+      const res = await this.api.post(roomID + "/playAgain", { json: { playerID, credentials } }).json();
+      const { nextMatchID } = res;
+      return nextMatchID;
+    } catch (err) {
+      console.log("failed to join room:", err);
+    }
+  }
+
   // POST /games/{game_name}/{room_id}/leave : leave a match
   async leaveRoom(roomID, id, playerCredentials) {
     try {

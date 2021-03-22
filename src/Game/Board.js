@@ -1,6 +1,15 @@
 import React from 'react';
 import { Popover } from 'react-tiny-popover';
 import ReactInterval from 'react-interval';
+import Marquee from "react-fast-marquee";
+import { api } from "../LobbyAPI";
+
+ // store user information to localStorage to use later when we arrive at the room
+ const saveInfo = (name, id, credentials) => {
+  localStorage.setItem("name", name);
+  localStorage.setItem("id", id);
+  localStorage.setItem("credentials", credentials);
+};
 
 function sortByNumber(a, b) {
   const compare = a.numberIndex - b.numberIndex;
@@ -44,7 +53,9 @@ function playConfetti(seconds = 7, particles = 150) {
   }, 250);
 }
 
+
 export default class Board extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -81,6 +92,14 @@ export default class Board extends React.Component {
   callUna() {
     if (getPlayer(this.props.G, this.props.playerID)) {
       this.props.moves.callUna(this.props.playerID);
+    }
+  }
+
+  endGame() {
+    if (getPlayer(this.props.G, this.props.playerID)) {
+      api.playAgain(this.props.matchID, this.props.playerID, localStorage.getItem("credentials")).then((nextMatchID) => {
+        this.props.moves.endGame(nextMatchID);
+      });
     }
   }
 
@@ -121,14 +140,20 @@ export default class Board extends React.Component {
     if (getPlayer(this.props.G, this.props.playerID)) {
       if (!getPlayer(this.props.G, this.props.playerID).hand.length) {
         if (getPlayer(this.props.G, this.props.playerID).hand.length !== getPlayer(prevProps.G, prevProps.playerID).hand.length) {
-          if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
-            if (this.props.ctx.gameover.winner.id === this.props.playerID) {
+          if (this.props.G.winnerID !== '') {
+            if (parseInt(this.props.G.winnerID, 10) === parseInt(this.props.playerID, 10)) {
               playConfetti(14);
             }
           } else {
             playConfetti();
           }
         }
+      }
+      if (this.props.G.nextMatchID !== '' && this.props.G.nextMatchID !== prevProps.G.nextMatchID) {
+        api.joinRoom(this.props.G.nextMatchID, localStorage.getItem("id"), localStorage.getItem("name")).then((credentials) => {
+          saveInfo(localStorage.getItem("name"), localStorage.getItem("id"), credentials);
+          window.location.pathname = "/rooms/" + this.props.G.nextMatchID;
+        });
       }
     }
   }
@@ -137,9 +162,9 @@ export default class Board extends React.Component {
     const isYourTurn = parseInt(this.props.ctx.currentPlayer, 10) === parseInt(this.props.playerID, 10);
     let win = '';
     let youWonGame = false;
-    if (this.props.ctx.gameover && this.props.ctx.gameover.winner !== undefined) {
-      youWonGame = this.props.ctx.gameover.winner.id === this.props.playerID;
-      win = <div id="win"><marquee>⭐ {youWonGame ? 'YOU WIN!!! ⭐' : `${this.props.matchData[parseInt(this.props.ctx.gameover.winner.id, 10)].name} WINS!!! 💀 YOU LOSE 💀`}</marquee></div>;
+    if (this.props.G.winnerID !== '') {
+      youWonGame = parseInt(this.props.G.winnerID, 10) === parseInt(this.props.playerID, 10);
+      win = <Marquee gradient={false} speed={60}>{youWonGame ? '⭐ YOU WIN!!! ⭐' : `⭐ ${this.props.matchData[parseInt(this.props.G.winnerID, 10)].name} WINS!!! 💀 YOU LOSE 💀`}</Marquee>;
     }
 
     let hand = [];
@@ -205,8 +230,9 @@ export default class Board extends React.Component {
           {getPlayer(this.props.G, this.props.playerID) ? <button id="call-una" className="btn-floating btn-large cyan" title="call una!" onClick={() => this.callUna()}><span>U</span></button> : ''}
         </div>
 
-        <div id="time">{ isYourTurn && !this.props.ctx.gameover ? this.state.timeRemaining : ''}</div>
-        <ReactInterval timeout={1000} enabled={!this.props.ctx.gameover} callback={() => this.checkTime(isYourTurn)} />
+        <div id="time">{ isYourTurn && this.props.G.winnerID === '' ? this.state.timeRemaining : ''}</div>
+        <ReactInterval timeout={1000} enabled={this.props.G.winnerID === ''} callback={() => this.checkTime(isYourTurn)} />
+        {this.props.playerID === '0' ? <button id="end-game" className="btn waves-effect waves-light red" title="End Game" onClick={() => this.endGame()}>End Game</button> : ''}
       </main>
     );
   }

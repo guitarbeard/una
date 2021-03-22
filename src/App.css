@@ -279,34 +279,28 @@ select {
     z-index: -1;
 }
 
-#win {
+.marquee-container {
     text-align: center;
     background-image: linear-gradient(120deg, rgba(0,255,0,1) 0%, rgba(255,0,0,1) 100%);
     color: white;
     animation: huerot 5s linear infinite;
-    height: 0;
-    transition: height 0.3s ease-in-out;
     font-family: 'Monoton', cursive;
     font-size: 3.56rem;
     width: 100%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     margin-top: 0;
     height: 90px;
+    line-height: 90px;
 }
 
-#win marquee {
-    width: 100%;
+.marquee {
+    white-space: nowrap;
 }
 
 @media (max-width: 787px) {
-    #win {
-        font-size: 9vw;
-    }
-    #win.active {
+    .marquee-container {
+        font-size: 2rem;
         height: 40px;
+        line-height: 40px;
     }
 }
 
@@ -555,3 +549,15 @@ select {
     opacity: 1;
 }
 
+#end-game {
+    position: fixed;
+    top: 14px;
+    left: 15px;
+    z-index: 5;
+}
+
+@media (max-width: 600px) {
+    #end-game {
+        top: 10px;
+    }
+}

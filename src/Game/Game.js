@@ -61,6 +61,10 @@ function createPlayer(G, ctx, playerID) {
   }
 }
 
+function gameHasEnded(G) {
+  return G.winnerID === '' ? false : true;
+}
+
 function canPlayCard(G, playerID, cardIndex) {
   return getPlayer(G, playerID).hand[cardIndex].color === 'wild' || getPlayer(G, playerID).hand[cardIndex].number === G.currentCard.number || getPlayer(G, playerID).hand[cardIndex].color === G.currentCard.color;
 }
@@ -95,7 +99,9 @@ function createSetup(ctx, setupData) {
     currentCard,
     reverse: false,
     skipped: true,
-    winsToEndGame: setupData.winsToEndGame
+    winsToEndGame: setupData.winsToEndGame,
+    nextMatchID: '',
+    winnerID: '' 
   };
 }
 
@@ -121,7 +127,11 @@ export const Una = {
 
     pass: {
       move: (G, ctx) => {
-        ctx.events.pass();
+        if (!gameHasEnded(G)) {
+          ctx.events.pass();
+        } else {
+          return INVALID_MOVE;
+        }
       },
       client: false,
       noLimit: true
@@ -129,7 +139,7 @@ export const Una = {
 
     callUna: {
       move: (G, ctx, playerID) => {
-        if (canCallUna(G, ctx, playerID)) {
+        if (!gameHasEnded(G) && canCallUna(G, ctx, playerID)) {
           getPlayer(G, playerID).calledUna = true;
         } else {
           return INVALID_MOVE;
@@ -139,11 +149,23 @@ export const Una = {
       noLimit: true
     },
 
+    endGame: {
+      move: (G, ctx, nextMatchID) => {
+        G.nextMatchID = nextMatchID;
+      },
+      client: false,
+      noLimit: true
+    },
+
     drawCard: {
       move: (G, ctx, playerID) => {
-        let drawLength = getPlayer(G, playerID).hand.length ? 1 : 7;
-        if (ctx.currentPlayer === playerID) {
-          addCardsToPlayer(G, ctx, playerID, drawLength);
+        if(!gameHasEnded(G)) {
+          let drawLength = getPlayer(G, playerID).hand.length ? 1 : 7;
+          if (ctx.currentPlayer === playerID) {
+            addCardsToPlayer(G, ctx, playerID, drawLength);
+          } else {
+            return INVALID_MOVE;
+          }
         } else {
           return INVALID_MOVE;
         }
@@ -153,7 +175,7 @@ export const Una = {
 
     punish: {
       move: (G, ctx, playerID) => {
-        if (G.players.length && getPlayer(G, playerID).hand.length === 1) {
+        if (!gameHasEnded(G) && G.players.length && getPlayer(G, playerID).hand.length === 1) {
           addCardsToPlayer(G, ctx, playerID, 4);
         } else {
           return INVALID_MOVE;
@@ -165,7 +187,7 @@ export const Una = {
     
     playCard: {
       move: (G, ctx, playerID, cardIndex, color) => {
-        if (canPlayCard(G, playerID, cardIndex)) {
+        if (!gameHasEnded(G) && canPlayCard(G, playerID, cardIndex)) {
           let playedCard = getPlayer(G, playerID).hand.splice(cardIndex, 1)[0];
           if (playedCard.color === 'wild') {
             playedCard.color = color ? color : getRandomColor(ctx);
@@ -190,6 +212,10 @@ export const Una = {
           }
           if(ctx.currentPlayer !== playerID) {
             ctx.events.pass();
+          }
+          var winner = playerHasWonGame(G);
+          if (winner) {
+            G.winnerID = winner.id;
           }
         } else {
           return INVALID_MOVE;
@@ -218,12 +244,5 @@ export const Una = {
         return G.skipped ? getNextPlayerIndex(nextPlayerIndex, G) : nextPlayerIndex;        
       }
     },
-  },
-
-  endIf: (G, ctx) => {
-    var winner = playerHasWonGame(G);
-    if (winner) {
-      return { winner };
-    }
   }
 };
